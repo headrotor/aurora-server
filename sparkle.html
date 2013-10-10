@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<!--
+Aurora GUI template, created J Foote October 2013
+
+-->
+<head>
+  <title>Aurora Sparkle</title> 
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  
+  <!-- <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">   -->
+  <!-- <script src="http://code.jquery.com/jquery-1.9.1.js"></script> -->
+  <!-- <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script> -->
+
+  <!-- from  -->
+<!-- <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"> -->
+<link rel="stylesheet" href="./jquery-ui-1.10.3.custom/css/dark-hive/jquery-ui-1.10.3.custom.css"/>
+<link rel="stylesheet" href="./aurora.css"/> 
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+
+<script type="text/javascript">
+
+
+  $(function(){
+  $('#color').slider({
+  range: true,
+  values: [ 17, 67 ],
+  slide: function( event, ui ) {
+  $(this).prev().val(ui.value)
+  }
+  })
+  $('#speed').slider({
+  //orientation: "vertical",
+  //range: true,
+  value: 51,
+  slide: function( event, ui ) {
+  $(this).prev().val(ui.value)
+  }
+  })
+  })
+
+
+  function ajax_request(data){
+  $.ajax({
+  url: "./sparkle.html",
+  type: "POST",
+  dataType: "json",
+  data: data,
+  success: ajax_success,
+  error: ajax_fail,
+  context: document.body
+  });
+
+  }
+
+  function ajax_success(data, text_status, response){
+  console.log('success',data);
+  console.log('success',data[0].response);
+  console.log('success',data[0].response[1]);
+  window.alert(data[0].response[0]);
+  }
+
+  function ajax_fail(response, text_status, code){
+  console.log('ajax fail');
+  window.alert(data[0]);
+  }
+
+
+  function log(msg) {
+  setTimeout(function() {
+  throw new Error(msg);
+  }, 0);
+  }  
+
+  function submit_request(){
+  var params = {};
+  params["function"] = "sparkle";
+  params["speed"] = $( "#speed" ).slider( "option", "value" );
+  params["colors"] = $( "#color" ).slider( "option", "values" );
+  ajax_request(params)
+
+  }
+
+</script>
+
+
+</head> 
+
+
+
+<body> 
+
+  <div data-role="header">
+    <h1>Aurora Sparkle A</h1>
+  </div>
+
+    <form method='post' action='./sparkle'>
+      
+      color:<br/>
+      <input type='hidden' name='color'/>
+      <div id="color" class="slider"></div><br/>
+      
+      speed:<br/>
+      <input type='hidden' name='speed'/>
+      <div id="speed" class="slider"></div><br/>
+    </form>
+
+
+
+<form name="test_form">
+<input type="button" onClick="submit_request();" value="start" title="Go!"/>
+</form>
+
+  <div data-role="footer">
+    <h4><a href="./index.html">Return</a></h4>
+  </div>
+
+</body>
+</html>

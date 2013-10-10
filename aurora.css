@@ -1,0 +1,25 @@
+@charset "utf-8";
+
+@font-face {
+    font-family: "Oswald";
+    font-style: normal;
+    font-weight: 400;
+    src: local("Oswald Regular"), local("Oswald-Regular"), url("http://themes.googleusercontent.com/static/fonts/oswald/v7/-g5pDUSRgvxvOl5u-a_WHw.woff") format("woff");
+}
+@font-face {
+    font-family: "Oswald";
+    font-style: normal;
+    font-weight: 700;
+    src: local("Oswald Bold"), local("Oswald-Bold"), url("http://themes.googleusercontent.com/static/fonts/oswald/v7/bH7276GfdCjMjApa_dkG6T8E0i7KZn-EPnyo3HZu7kw.woff") format("woff");
+}
+
+body {
+    font-family: 'Oswald', sans-serif;
+    color: #A0A0A0;
+    text-align: center;
+    background-color:#303030;} 
+
+a:link {color:#F0F0F0;}      /* unvisited link */
+a:visited {color:#A0A0A0;}  /* visited link */
+a:hover {color:#FFFFFF;}  /* mouse over link */
+a:active {color:#0000FF;}  /* selected link */ 
