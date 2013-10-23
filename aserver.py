@@ -9,6 +9,13 @@ import webbrowser
 import sys
 from urlparse import urlparse, parse_qs
 
+# Echo client program
+import socket
+
+SOCKHOST = '127.0.0.1'    # Send the data
+SOCKPORT = 50007          # The same port as used by the server
+
+
 class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     """The test example handler."""
 
@@ -20,6 +27,7 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         try:
 	#Check the file extension required and
 	#set the right mime type
+	#NOTE Added the same for js as to serve them locally
 
             sendReply = False
             if self.path.endswith(".html"):
@@ -33,6 +41,9 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 sendReply = True
             elif self.path.endswith(".jpg"):
                 mimetype='image/jpg'
+                sendReply = True
+            elif self.path.endswith(".js"):
+                mimetype='text/javascript'
                 sendReply = True
 
             if sendReply == True:
@@ -59,6 +70,11 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         data_string = self.rfile.read(length)
         #print repr(self.headers)
         print 'Recieved "%s" from page %s' % (str(data_string), self.path)
+
+        self.s.write(str(data_str))
+
+
+
 
 
         # now parse post things and deal with them
@@ -87,20 +103,23 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 # If someone went to "http://something.somewhere.net/foo/bar/",
                 # then s.path equals "/foo/bar/".
 
-def open_browser():
-    """Start a browser after waiting for half a second."""
-    def _open_browser():
-        webbrowser.open('http://localhost:%s/%s' % (PORT, FILE))
-    thread = threading.Timer(0.5, _open_browser)
-    thread.start()
+
+    def attach_socket(self,socket):
+        self.s = socket
+
 
 def start_server():
     """Start the server."""
     server_address = ("", PORT)
+
     server = BaseHTTPServer.HTTPServer(server_address, TestHandler)
     print "aurora server listening on port " + str(PORT)
+
     server.serve_forever()
 
 if __name__ == "__main__":
     #open_browser()
     start_server()
+    while True:
+        print "Still have control..."
+        time.sleep(0.5)

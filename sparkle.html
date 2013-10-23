@@ -17,74 +17,7 @@ Aurora GUI template, created J Foote October 2013
 <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"> 
 <!-- <link rel="stylesheet" href="./jquery-ui-1.10.3.custom/css/dark-hive/jquery-ui-1.10.3.custom.css"/> -->
 <link rel="stylesheet" href="./aurora.css"/> 
-<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 
-
-<script type="text/javascript">
-
-
-  $(function(){
-  $('#color').slider({
-  range: true,
-  values: [ 17, 67 ],
-  slide: function( event, ui ) {
-  $(this).prev().val(ui.value)
-  }
-  })
-  $('#speed').slider({
-  //orientation: "vertical",
-  //range: true,
-  value: 51,
-  slide: function( event, ui ) {
-  $(this).prev().val(ui.value)
-  }
-  })
-  })
-
-
-  function ajax_request(data){
-  $.ajax({
-  url: "./sparkle.html",
-  type: "POST",
-  dataType: "json",
-  data: data,
-  success: ajax_success,
-  error: ajax_fail,
-  context: document.body
-  });
-
-  }
-
-  function ajax_success(data, text_status, response){
-  console.log('success',data);
-  console.log('success',data[0].response);
-  console.log('success',data[0].response[1]);
-  window.alert(data[0].response[0]);
-  }
-
-  function ajax_fail(response, text_status, code){
-  console.log('ajax fail');
-  window.alert(data[0]);
-  }
-
-
-  function log(msg) {
-  setTimeout(function() {
-  throw new Error(msg);
-  }, 0);
-  }  
-
-  function submit_request(){
-  var params = {};
-  params["function"] = "sparkle";
-  params["speed"] = $( "#speed" ).slider( "option", "value" );
-  params["colors"] = $( "#color" ).slider( "option", "values" );
-  ajax_request(params)
-
-  }
-
-</script>
 
 
 </head> 
@@ -100,12 +33,21 @@ Aurora GUI template, created J Foote October 2013
     <form method='post' action='./sparkle'>
       
       color:<br/>
-      <input type='hidden' name='color'/>
-      <div id="color" class="slider"></div><br/>
+      <div class="color-box">
+		  <div class="color-selector">
+			  <div id="hue" class="slider color-picker-slider"></div>
+		  </div>
+		  
+		  <div id="swatch" class="ui-corner-all color-swatch"><b>Sample Color:</b> <span id="color-hash"></span>
+		  </div>
+      
+      <div style="clear:both;"></div>
       
       speed:<br/>
       <input type='hidden' name='speed'/>
-      <div id="speed" class="slider"></div><br/>
+      <div id="speed" class="slider"></div>
+      </div>
+      <br/>
     </form>
 
 
@@ -117,6 +59,11 @@ Aurora GUI template, created J Foote October 2013
   <div data-role="footer">
     <h4><a href="./index.html">Return</a></h4>
   </div>
+
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+<script src="./aurora.js"></script>
+<script src="./jquery.ui.touch-punch.min.js"></script>
 
 </body>
 </html>
