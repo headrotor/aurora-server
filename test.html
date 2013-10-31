@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<!--
+Aurora GUI template, created J Foote October 2013
+
+-->
+<head>
+  <title>Aurora Sparkle</title> 
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  
+  <!-- <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">   -->
+  <!-- <script src="http://code.jquery.com/jquery-1.9.1.js"></script> -->
+  <!-- <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script> -->
+
+  <!-- from  -->
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css"> 
+<!-- <link rel="stylesheet" href="./jquery-ui-1.10.3.custom/css/dark-hive/jquery-ui-1.10.3.custom.css"/> -->
+<link rel="stylesheet" href="./aurora.css"/> 
+
+</head> 
+
+
+
+<body> 
+
+
+  <div data-role="header">
+    <h1>Aurora TEST PAGE</h1>
+  </div>
+
+    <form method='post' action='./test'>
+      
+      color:<br/>
+      <div class="color-box">
+		  <div class="color-selector">
+			  <div id="hue" class="slider color-picker-slider"></div>
+		  </div>
+		  
+		  <div id="swatch" class="ui-corner-all color-swatch"><b>Sample Color:</b> <span id="color-hash"></span>
+		  </div>
+      
+      <div style="clear:both;"></div>
+      
+      <!-- speed:<br/> -->
+      <!-- <input type='hidden' name='speed'/> -->
+      <!-- <div id="speed" class="slider"></div> -->
+      <!-- </div> -->
+       <br/> 
+
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pod:&nbsp;&nbsp;<input id="inp1" type="text" value="1"> <br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;Limb:&nbsp;&nbsp;<input id="inp2" type="text" value="2"> <br/>
+      Branch:&nbsp;&nbsp;<input id="inp3" type="text" value="3"> <br/>
+      
+    </form>
+    <div id="result"></div>
+
+
+<form name="test_form">
+<input type="button" onClick="submit_test();" value="TEST" title="Go!"/>
+</form>
+
+  <div data-role="footer">
+    <h4><a href="./index.html">Return</a></h4>
+  </div>
+
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+<script src="./aurora.js"></script>
+<script src="./jquery.ui.touch-punch.min.js"></script>
+
+</body>
+</html>
