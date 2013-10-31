@@ -9,6 +9,9 @@ import webbrowser
 import sys
 from urlparse import urlparse, parse_qs
 
+import logging
+logger = logging.getLogger(__name__)
+
 # Echo client program
 import socket
 
@@ -51,6 +54,7 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                     #f = open(curdir + sep + self.path) 
                 path = "." + self.path
                 print "serving " + path
+                logger.info("serving %s", path)
                 f = open(path) 
                 self.send_response(200)
                 self.send_header('Content-type',mimetype)
@@ -62,25 +66,23 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         except IOError:
             self.send_error(404,'File Not Found: %s' % self.path)
-
+            logger.info("404 file not found '%s'", self.path)
 
     def do_POST(self):
-        """Handle a post request by returning the square of the number."""
+        """Handle a post request-- send the data to the chid proc"""
         length = int(self.headers.getheader('content-length'))        
         data_string = self.rfile.read(length)
         #print repr(self.headers)
         print 'Recieved "%s" from page %s' % (str(data_string), self.path)
+        logger.info('Received "%s" from page %s', str(data_string), self.path)
 
-        self.s.write(str(data_str))
-
-
-
-
+        try:
+            self.s.write(str(data_str))
+        except AttributeError as e:
+            print "error writing DMX process "
+            raise e
 
         # now parse post things and deal with them
-
-
-
         try:
             params = parse_qs(data_string)
             print repr(params)
@@ -110,10 +112,17 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 def start_server():
     """Start the server."""
-    server_address = ("", PORT)
+    logging.basicConfig(filename='logs/aurora.log', 
+                        filemode='w', 
+                        level=logging.DEBUG,
+                        format='%(asctime)s %(message)s')
 
+    logging.info('server started')
+
+    server_address = ("", PORT)
     server = BaseHTTPServer.HTTPServer(server_address, TestHandler)
     print "aurora server listening on port " + str(PORT)
+    logging.info('aurora server listening on port %s', str(PORT))
 
     server.serve_forever()
 
