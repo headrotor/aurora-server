@@ -7,6 +7,7 @@
 from multiprocessing import Process, Pipe
 import os
 import sys
+import struct
 import time #For the timestamp and sleep function
 import urlparse # decode the messages we are sent
 from modDMXthread import DMXUniverse
@@ -48,17 +49,28 @@ def listener(myP,foo):
             print msg
             #if msg == "foo":
             #    assert(False)
-            func = msg['function'][0].strip("'")
-            print "function: " + repr(func)
-            if func == 'test':
-              print "TEST! "
-              val = int(msg['p1'][0])
-              for i in range(256):
-                univ0.set_chan_int(i, val)
+            try:
+              func = msg['function'][0].strip("'")
+            except KeyError:
+              logger.debug("Badly formed URL, skipping")
+              myP.send('Badly formed URL')
+            else:
+              print "function: " + repr(func)
+              if func == 'test':
+                cstr = msg['colors'][0].strip("'")
+                colors =  struct.unpack('BBB',cstr.decode('hex'))
+
+                print repr(colors)
+                #val = int(msg['p1'][0])
+                for i in range(0,256,3):
+                  univ0.set_chan_int(i+0, colors[0])
+                  univ0.set_chan_int(i+1, colors[1])
+                  univ0.set_chan_int(i+2, colors[2])
                 #univ1.set_chan_int(i, val)
-                print "sent %d to %d" % (i,val)
-            sys.stdout.flush()
-            myP.send('DMX OK')
+                  print "sent %d to %d" % (i,colors[0])
+              sys.stdout.flush()
+              myP.send('DMX OK')
+
         # else:
         #     time.sleep(0.1)
 

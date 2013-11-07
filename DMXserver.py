@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 FILE = 'sparkle.html'
 PORT = 8080
 
@@ -13,6 +15,7 @@ import time
 
 import logging
 logger = logging.getLogger(__name__)
+
 
 PORT = 8080
 server_address = ("",PORT)
@@ -82,9 +85,12 @@ class AuroraHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 #        try:
         params = parse_qs(data_string)
         handler_response = self.server.handler(params)
-        print handler_response
+        logging.info("Handler response: " + handler_response)
 
         result = [handler_response, 99]
+
+        
+
 #        except:
 #            result = 'error'
 
@@ -129,13 +135,14 @@ def start_child():
     """Start the child process that generates DMX events"""
     global parentP
     import DMXgenerator
-    try:
-        parentP.close()
-    except:
-        print sys.exc_info()
+    if parentP is not None:
+        try:
+            parentP.close()
+        except:
+            print sys.exc_info()
     parentP, childP = Pipe()
     p = Process(target=DMXgenerator.listener, args=(childP,"foo"))
-    p.daemon = True
+    #p.daemon = True
     p.start()
     childP.close() # don't need child end, only parent
 
@@ -158,6 +165,8 @@ def start_server():
 
 if __name__ == "__main__":
     #open_browser()
+    global parentP
+    parentP = None
     start_server()
 
 

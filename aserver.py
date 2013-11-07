@@ -83,16 +83,15 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             raise e
 
         # now parse post things and deal with them
-        try:
-            params = parse_qs(data_string)
-            print repr(params)
-            result = ['OK!', 99]
-        except:
-            result = 'error'
+        # try:
+        #     params = parse_qs(data_string)
+        #     print repr(params)
+        #     result = ['OK!', 99]
+        # except:
+        #     result = 'error'
 
 
         # now parse post things and deal with them
-
 
         self.send_response(200)
         #self.send_header("Content-type", "text/html")
