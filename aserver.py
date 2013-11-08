@@ -48,12 +48,6 @@ class TestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             elif self.path.endswith(".js"):
                 mimetype='text/javascript'
                 sendReply = True
-            elif self.path.endswith(".woff"):
-                mimetype='font/woff'
-                sendReply = True
-            elif self.path.endswith(".map"):
-                mimetype='text/plain'
-                sendReply = True
 
             if sendReply == True:
 				#Open the static file requested and send it
