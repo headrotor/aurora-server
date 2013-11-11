@@ -1,10 +1,11 @@
+#!/usr/bin/python
 import random
 import sys
 import numpy
 import pygame
 from pygame.locals import *
 import matplotlib.pyplot as plt
-
+import matplotlib.colors
 
 class Palettes():
 
@@ -25,12 +26,24 @@ class Palettes():
 
     def get_cmap(self,cmap_name):
         cmap=plt.get_cmap(cmap_name)
-        cmap = 255*cmap(range(256))
+        cmap = cmap(range(256))
         print repr(cmap)
         sys.stdout.flush()
-        return(cmap)
+        return(255*cmap)
 
 
+    def get_custom(self):
+        """grayscale """
+        segmentdata = { 'red': [(0.0, 0.0, 0.0),
+                                (1.0, 255.0, 255.0)],
+                        'green': [(0.0, 0.0, 0.0),
+                                (1.0, 255.0, 255.0)],
+                        'blue': [(0.0, 0.0, 0.0),
+                                (1.0, 255.0, 255.0)]}
+
+
+        cmap = matplotlib.colors.LinearSegmentedColormap('foo',segmentdata)
+        return [ cmap(1.*i/256) for i in range(256)]
 
 class Colormorph():
 
@@ -61,6 +74,83 @@ class Colormorph():
         return self.fireSurface
 
 
+class Ripple():
+    """Ripple out from inside to outside"""
+
+
+    def __init__(self, size=(40, 15)):
+        self.NX = size[0]
+        self.NY = size[1]
+        #self.fireSurface = pygame.Surface(size, 0, 8 )      
+        #random.seed()
+        P = Palettes()
+        self.cmap1 = P.get_cmap('Pastel1')
+        self.cmap1 = P.get_cmap('hsv')
+        self.cmap1 = P.get_custom()
+        #print repr(self.cmap1)
+        
+        self.cmap2 = P.flame()
+        self.vals = numpy.zeros((self.NX,self.NY))
+        self.smooth = 0.0
+        #self.fireSurface.set_palette(self.cmap1)
+        self.count = 0
+
+    def iter(self):
+        for i in range(self.NX):
+            for j in range(self.NY):
+                if i == self.count: # roatate around
+                #if j == self.count: # inside out
+                    self.vals[i,j] = 255
+                else:
+                    self.vals[i,j] = 0
+
+        k = 0.25*numpy.ones((5))
+        k[0] = 0.2
+        k[1] = 0.5
+        k[2] = 1.0
+        k[3] = 0.5
+        k[4] = 0.2
+        k = k / 2.4
+        
+# smooth shift inside out
+        # for j in range(self.NY):
+        #     sys.stdout.flush()
+        #     foo= numpy.convolve(self.vals[:,j],k,'same')            
+        #     self.vals[:,j] = foo
+
+
+
+# smooth rotate
+        for j in range(self.NY):
+            sys.stdout.flush()
+            #print "before " + repr(self.vals[i,:])
+            foo= numpy.convolve(self.vals[:,j],k,'same')            
+            #print "after " + repr(foo)
+            self.vals[:,j] = foo[:]
+
+
+        self.count = (self.count + 1) 
+        print self.count
+        sys.stdout.flush()
+        if self.count >= self.NY:
+            self.count = 0
+
+    def get_frame(self):
+        #self.disturb()
+        """ after an iteration, get the new matrix of color vals"""
+        return(self.vals.tolist())
+
+    def disturb(self):
+        pass
+
+
+    # def getFireSurface(self):
+    #     self.iter()
+        
+    #     pygame.surfarray.blit_array(self.fireSurface, self.vals.astype('int'))
+    #     return self.fireSurface
+
+
 
 class WaveEqn():
 
@@ -86,7 +176,7 @@ class WaveEqn():
         self.fireSurface = pygame.Surface(size, 0, 8 )      
         P = Palettes()
         self.cmap1 = P.get_cmap('Pastel1')
-        self.fireSurface.set_palette(self.cmap1)
+        #self.fireSurface.set_palette(self.cmap1)
         random.seed()
 
     def iter(self):
@@ -143,7 +233,11 @@ class WaveEqn():
         for i in range(10):
             self.vals[self.old][1][i] = random.randint(0,self.max)
 
-    
+
+    def get_frame(self):
+        self.disturb()
+        """ after an iteration, get the new matrix of color vals"""
+        return(self.vals[self.old].tolist())
 
     def getFireSurface(self):
         self.disturb()
