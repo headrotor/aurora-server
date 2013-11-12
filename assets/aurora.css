@@ -24,13 +24,31 @@ a:visited {color:#A0A0A0;}  /* visited link */
 a:hover {color:#FFFFFF;}  /* mouse over link */
 a:active {color:#0000FF;}  /* selected link */ 
 
+h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6 {
+	font-family: 'Oswald', sans-serif;
+}
+
+html, button, input, select, textarea {
+	font-family: 'Oswald', sans-serif;
+}
+
+ul {
+	list-style-type: none;
+	padding: 0;
+}
+
+.aurora-main {
+	padding: 0;
+	text-align: center;
+}
+
 /* The CSS code for Color selector */
 .color-box{
 	width:320px;
 	margin: 0px auto;
 }
 
-#red, #green, #blue, #hue, #speed {
+#red, #green, #blue, #hue, #speed, #random {
    
     width: 300px;
     margin: 15px;
@@ -48,3 +66,29 @@ a:active {color:#0000FF;}  /* selected link */
 #green .ui-slider-handle { border-color: #8ae234; }
 #blue .ui-slider-range { background: #729fcf; }
 #blue .ui-slider-handle { border-color: #729fcf; }
+
+#patterns ul {
+	padding: 0;
+}
+#patterns ul li {
+	padding: 10px 0;
+}
+#patterns ul li:first-child {
+	padding-top: 0;
+}
+.aurora-main .tab-content {
+	padding: 20px 0;
+	text-align: center;
+}
+#controls-form {
+	display: inline-block;
+}
+.colorpicker-cont {
+	display: inline-block;
+}
+#colorpicker {
+	margin-top: 10px;
+}
+.footer {
+	margin-top: 30px;
+}

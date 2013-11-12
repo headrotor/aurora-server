@@ -153,7 +153,15 @@ $(function() {
     
     $( "#hue" ).draggable();
     $( "#hue" ).slider({ value: 127 });
-    
+
+
+	//init tabs
+	$('.nav-tabs a').click(function (e) {
+	  e.preventDefault()
+	  $(this).tab('show')
+	});
+	
+
 });
 
 
