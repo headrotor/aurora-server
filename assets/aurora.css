@@ -17,7 +17,8 @@ body {
     font-family: 'Oswald', sans-serif;
     color: #A0A0A0;
     text-align: center;
-    background-color:#303030;} 
+    background: url('noise.png') #303030;
+} 
 
 a:link {color:#F0F0F0;}      /* unvisited link */
 a:visited {color:#A0A0A0;}  /* visited link */

@@ -175,9 +175,17 @@ $(function() {
 	$('#controls-form').submit(function(e) {
 		e.preventDefault();
 		e.stopPropagation();
-		console.log('submit');
 	
 		submit_request();
+	});
+	
+	//button event handlers
+	$('#btn-summer').click(function(e) {
+		e.preventDefault();
+		
+		//console.log('button clicked');
+		//console.log(e);
+		
 	});
 	
 
