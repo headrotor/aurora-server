@@ -16,8 +16,8 @@ import ConfigParser
 
 # local classes
 from modDMXthread import DMXUniverse
-#from generative import WaveEqn as IterEffect
-import generative 
+import imagemunger # get tree colors repeatedly from image file
+import generative # iteratively generate tree colours
 import aurora
 import random
 
@@ -32,8 +32,9 @@ else:
   default_timer = time.time
 
 # global vars
-tree = None
+ticks = default_timer()
 
+tree = None
 
 
 def info(title):
@@ -51,13 +52,15 @@ class activeTree(object):
     self.state = "idle"
     self.cfg = ConfigParser.RawConfigParser()
 
+    imgfile = "testout.png"
+    self.imrow = 0  # image row counter
+    self.imd = imagemunger.ImageData(imgfile,len(self.tree.branches))
 
     self.brightness = 0.5
     self.hue = 0.0              # hue offset
     self.saturation = 1.0
     self.cfgfile = "defaults.cfg"
     self.update_config() # read config options from file
-    self.stop_timer() # put timer in known state
     # instantiate iterative effect
     self.effects = []  # array of effects from  generative.py
     size = (22,15)
@@ -68,24 +71,13 @@ class activeTree(object):
     self.palletes = P.get_all()
     self.current_pal = 'grayscale'
 
+
+
     self.cef = 1 # current effect
     self.old_frame = self.effects[self.cef].get_frame()
     self.new_frame = self.effects[self.cef].get_frame()
     self.interc = 0 # count for interpolation
     self.framec = 3 # if non-zero, interpolate new frame
-
-  def start_timer(self):
-    """ Start a timer for time-limited operations"""
-    self.clock = default_timer()
-
-  def stop_timer(self):
-    self.clock = None
-    
-  def time_elapsed(self):
-    """ return time elapsed since we started the clock"""
-    if self.clock is None:
-      return 0.0
-    return default_timer() - self.clock
 
 
   def tree_dark(self):
@@ -117,8 +109,9 @@ class activeTree(object):
 
   def update(self):
     """ call this repeatedly to generate new data and update things"""
-    if self.state == "idle":
-      self.update_iter()
+    #if self.state == "idle":
+    #  self.update_iter()
+    self.update_image()
 
   def send_frame(self,frame): 
     """ send the following frame """
@@ -157,8 +150,31 @@ class activeTree(object):
           #  print "index %d, color %s" % (index, repr(color))
         i += 1
 
+  def update_image(self):
+    """Get next row of image file, and do it """
+    self.imrow = self.imrow + 1
+    if self.imrow >= self.imd.y:
+      #return
+      self.imrow = 0
+      print "image sent at " + repr(default_timer())
+    r = self.imrow
+    self.interc += 1
+    if self.interc >= self.framec:
+      self.interc = 0
+      row = self.imd.getrow(r)
+    else: # cross-fade from previous frame
+      row = self.imd.getrowinterp(r,self.interc/float(self.framec))
+              
+    for b, pixel in enumerate(row):
+              # set each branch to the corresponding pixel in this row
+              #treeDMX.setBranchRGB(b,pixel)
+      brindex = self.tree.branches[b].brindex
+      self.tree.setBranchInt(brindex,pixel)
+    self.tree.TreeSend()
+
+
   def update_iter(self):
-    """ Get the latest frame from the pattern, and do it..."""
+    """ in generative mode, calc latest pattern and and do it..."""
     self.interc += 1
     if self.interc >= self.framec:
       self.interc = 0
@@ -203,6 +219,19 @@ class activeTree(object):
         self.hue = hue
         logger.info("Changing hue from %f to %f" % (self.hue,hue))
         print "Changing hue from %f to %f" % (self.hue,hue)
+
+
+def waitrate(frate):
+  """ Wait for 1/framerate of a second since the last time we called"""
+  global ticks
+  delay = float(1/float(frate))
+  elapsed = default_timer() - ticks
+  sleeptime = delay - elapsed
+  if sleeptime > 0:
+    time.sleep(sleeptime)
+
+  ticks = default_timer()
+
 
 def listener(myP,foo):
   """ This is started by the parent, listens for commands coming in on 
@@ -262,7 +291,8 @@ def listener(myP,foo):
 
     tree.update()        
         #univ1.send_buffer()
-    time.sleep(0.02)
+    waitrate(20.0)
+    #time.sleep(0.02)
 
 
 if __name__ == '__main__':
