@@ -140,14 +140,18 @@ class AuroraDMX(object):
         self.InitFromCfg(cfgfile)
         self.uni0 = modDMXthread.DMXUniverse(self.universes[0])
         self.DMX = [self.uni0]  # array of DMX devices, 1 per universe
+        print self.universes[0]
         if len(self.universes) > 1:
             self.uni1 = modDMXthread.DMXUniverse(self.universes[1])
             self.DMX.append(self.uni1)
+            print self.universes[1]
         else:
             self.uni1 = None
 
     def TreeSend(self, dstart=0, dend=0):
         self.uni0.send_buffer()
+        # needed for usb_dmx on 2 universes !?
+        time.sleep(0.01)
         if self.uni1 is not None:
             self.uni1.send_buffer()
 
@@ -325,7 +329,7 @@ class AuroraDMX(object):
                 for br in lb.branches:
                     row.append(br)
                 self.bm.append(row)
-                print "appended %d-element row %d" % (len(row),len(self.bm))
+                #print "appended %d-element row %d" % (len(row),len(self.bm))
         
 # if running from the console, do some test stuff
 if __name__ == '__main__':
@@ -388,13 +392,13 @@ if __name__ == '__main__':
     if single:
         b = limb.branches[int(sys.argv[3])]
         treeDMX.setBranchRGB(b.brindex, color)
-        b.printInfo()
+        #b.printInfo()
        
     else:
         for b in limb.branches:
             print str(b)
             treeDMX.setBranchRGB(b.brindex, color)
-            b.printInfo()
+            #b.printInfo()
     sys.stdout.flush()
     treeDMX.TreeSend()
     time.sleep(0.1)  # give threads a chance to work

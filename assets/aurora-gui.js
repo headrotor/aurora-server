@@ -112,6 +112,12 @@ function submit_request(){
     ajax_request(params)
 }
 
+function submit_button(the_button){
+    var params = {};
+    params["function"] = the_button;
+    ajax_request(params)
+}
+
 //function submit_test(){
 //    var params = {};
 //    params["function"] = "test";
@@ -180,13 +186,14 @@ $(function() {
 	});
 	
 	//button event handlers
-	$('#btn-summer').click(function(e) {
-		e.preventDefault();
+    $('#btn-summer').click(function(e) {
+	e.preventDefault();
+	window.alert(e);
+	submit_button("summer")
+	console.log('sum');
+	console.log(e);
 		
-		//console.log('button clicked');
-		//console.log(e);
-		
-	});
+    });
 	
 
 });

@@ -140,8 +140,9 @@ if __name__ == '__main__':
     val = int(sys.argv[3])
     for c in range(start, end):
         univ.set_chan_int(c, val)
-    univ.send_buffer()
-
+    while(1):    
+        univ.send_buffer()
+        time.sleep(0.1)
     # don't kill thread until we've done the work!
     time.sleep(0.1)
 

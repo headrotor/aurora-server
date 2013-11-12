@@ -10,10 +10,16 @@ import matplotlib.colors
 class Palettes():
 
     def __init__(self):
-        qual_names = ['Accent', 'Dark2', 'hsv', 'Paired', 'Pastel1',
+        self.qual_names = ['Accent', 'Dark2', 'hsv', 'Paired', 'Pastel1',
                              'Pastel2', 'Set1', 'Set2', 'Set3', 'spectral']
-        pass
 
+    def get_all(self):
+        """ generate all palettes and return in a list"""
+        pals = {}
+        pals['grayscale'] = self.grayscale()
+        for name in self.qual_names:
+            pals[name] = self.get_cmap(name)
+        return pals
 
     def flame(self):
         gstep, bstep = 75, 150
@@ -23,16 +29,15 @@ class Palettes():
         cmap[bstep:, 2] = cmap[:-bstep, 0]
         return cmap  
 
-
     def get_cmap(self,cmap_name):
         cmap=plt.get_cmap(cmap_name)
         cmap = cmap(range(256))
-        print repr(cmap)
+        #print repr(cmap)
         sys.stdout.flush()
         return(255*cmap)
 
 
-    def get_custom(self):
+    def grayscale(self):
         """grayscale """
         segmentdata = { 'red': [(0.0, 0.0, 0.0),
                                 (1.0, 255.0, 255.0)],
@@ -52,12 +57,8 @@ class Colormorph():
         self.NY = size[1]
         self.fireSurface = pygame.Surface(size, 0, 8 )      
         random.seed()
-        P = Palettes()
-        self.cmap1 = P.get_cmap('Pastel1')
-        self.cmap2 = P.flame()
         self.vals = numpy.zeros((self.NX,self.NY))
-
-        self.fireSurface.set_palette(self.cmap1)
+        #self.fireSurface.set_palette(self.cmap1)
         self.count = 0
 
     def iter(self):
@@ -83,13 +84,10 @@ class Ripple():
         self.NY = size[1]
         #self.fireSurface = pygame.Surface(size, 0, 8 )      
         #random.seed()
-        P = Palettes()
-        self.cmap1 = P.get_cmap('Pastel1')
-        self.cmap1 = P.get_cmap('hsv')
-        self.cmap1 = P.get_custom()
+        #P = Palettes()
+        #self.cmap1 = P.get_cmap('Pastel1')
         #print repr(self.cmap1)
         
-        self.cmap2 = P.flame()
         self.vals = numpy.zeros((self.NX,self.NY))
         self.smooth = 0.0
         #self.fireSurface.set_palette(self.cmap1)
@@ -98,8 +96,8 @@ class Ripple():
     def iter(self):
         for i in range(self.NX):
             for j in range(self.NY):
-                if i == self.count: # roatate around
-                #if j == self.count: # inside out
+                #if i == self.count: # roatate around
+                if j == self.count: # inside out
                     self.vals[i,j] = 255
                 else:
                     self.vals[i,j] = 0
@@ -113,20 +111,20 @@ class Ripple():
         k = k / 2.4
         
 # smooth shift inside out
-        # for j in range(self.NY):
-        #     sys.stdout.flush()
-        #     foo= numpy.convolve(self.vals[:,j],k,'same')            
-        #     self.vals[:,j] = foo
+        for j in range(self.NY):
+            sys.stdout.flush()
+            foo= numpy.convolve(self.vals[:,j],k,'same')            
+            self.vals[:,j] = foo
 
 
 
 # smooth rotate
-        for j in range(self.NY):
-            sys.stdout.flush()
-            #print "before " + repr(self.vals[i,:])
-            foo= numpy.convolve(self.vals[:,j],k,'same')            
-            #print "after " + repr(foo)
-            self.vals[:,j] = foo[:]
+        # for j in range(self.NY):
+        #     sys.stdout.flush()
+        #     #print "before " + repr(self.vals[i,:])
+        #     foo= numpy.convolve(self.vals[:,j],k,'same')            
+        #     #print "after " + repr(foo)
+        #     self.vals[:,j] = foo[:]
 
 
         self.count = (self.count + 1) 
@@ -173,9 +171,9 @@ class WaveEqn():
         #    self.vals.append([[0.0 for x in xrange(nx)] for y in xrange(ny)])
 
 
-        self.fireSurface = pygame.Surface(size, 0, 8 )      
-        P = Palettes()
-        self.cmap1 = P.get_cmap('Pastel1')
+        #self.fireSurface = pygame.Surface(size, 0, 8 )      
+        #P = Palettes()
+        #self.cmap1 = P.get_cmap('Pastel1')
         #self.fireSurface.set_palette(self.cmap1)
         random.seed()
 
@@ -229,13 +227,29 @@ class WaveEqn():
     #     im.save("foo%d.png" % self.imcount)
     #     self.imcount += 1
 
-    def disturb(self):
-        for i in range(10):
-            self.vals[self.old][1][i] = random.randint(0,self.max)
+    def disturb_x(self):
+        x = self.old
+        for i in range(self.NX):
+            self.vals[x][i][0] += random.randint(-self.max/2,self.max/2)
+            if self.vals[x][i][0] > 255:
+                self.vals[x][i][0] = 255
+            if self.vals[x][i][0] < 1:
+                self.vals[x][i][0] = 0
+            #self.vals[x][i][1] = self.vals[x][i][0]
+            #self.vals[x][i][2] = self.vals[x][i][0]
 
+    def disturb_y(self):
+        x = self.old
+        for j in range(self.NY):
+            self.vals[x][0][j] += random.randint(-self.max/2,self.max/2)
+            if self.vals[x][0][j] > 255:
+                self.vals[x][0][j] = 255
+            if self.vals[x][0][j] < 1:
+                self.vals[x][0][j] = 0
+            #self.vals[x][1][j] = self.vals[x][0][j]
 
     def get_frame(self):
-        self.disturb()
+        self.disturb_x()
         """ after an iteration, get the new matrix of color vals"""
         return(self.vals[self.old].tolist())
 
