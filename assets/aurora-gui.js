@@ -188,9 +188,31 @@ $(function() {
 	//button event handlers
     $('#btn-summer').click(function(e) {
 	e.preventDefault();
-	window.alert(e);
 	submit_button("summer")
 	console.log('sum');
+	console.log(e);
+		
+    });
+    $('#btn-autumn').click(function(e) {
+	e.preventDefault();
+	submit_button("autumn")
+	console.log('aut');
+	console.log(e);
+		
+    });
+    $('#btn-winter').click(function(e) {
+	e.preventDefault();
+	window.alert(e);
+	submit_button("winter")
+	console.log('win');
+	console.log(e);
+		
+    });
+    $('#btn-spring').click(function(e) {
+	e.preventDefault();
+	window.alert(e);
+	submit_button("spring")
+	console.log('spr');
 	console.log(e);
 		
     });

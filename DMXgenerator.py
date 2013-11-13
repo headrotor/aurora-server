@@ -52,9 +52,9 @@ class activeTree(object):
     self.state = "idle"
     self.cfg = ConfigParser.RawConfigParser()
 
-    imgfile = "testout.png"
+
+    self.load_images()
     self.imrow = 0  # image row counter
-    self.imd = imagemunger.ImageData(imgfile,len(self.tree.branches))
 
     self.brightness = 0.5
     self.hue = 0.0              # hue offset
@@ -71,13 +71,37 @@ class activeTree(object):
     self.palletes = P.get_all()
     self.current_pal = 'grayscale'
 
-
+    # tree state machine: idle (dark), image, generative 
+    self.mode = 'idle' # idle or image to do generative or canned animations
 
     self.cef = 1 # current effect
     self.old_frame = self.effects[self.cef].get_frame()
     self.new_frame = self.effects[self.cef].get_frame()
     self.interc = 0 # count for interpolation
     self.framec = 3 # if non-zero, interpolate new frame
+
+
+
+  def load_images(self):
+    """ scan image directory, load images """
+    imgdir = "./images"
+
+    # make list of image files 
+    self.imfiles = []
+    self.imgs = []
+    for f in os.listdir(imgdir):
+      fname = os.path.join(imgdir, f)
+      if os.path.isfile(fname):
+        self.imfiles.append(fname)
+        img = imagemunger.ImageData(fname, len(self.tree.branches))
+        self.imgs.append(img)
+        print 'loading image "%s"' % fname 
+    self.imd = img
+
+  def set_image(self,n):
+    self.imd = self.imgs[n]
+    print "setting image to " + self.imfiles[n]
+    self.row = 0
 
 
   def tree_dark(self):
@@ -109,9 +133,15 @@ class activeTree(object):
 
   def update(self):
     """ call this repeatedly to generate new data and update things"""
-    #if self.state == "idle":
-    #  self.update_iter()
-    self.update_image()
+
+    if self.mode == 'image':
+      self.update_image()
+    elif self.mode == 'generate':
+      self.update_iter()
+    elif self.mode == 'test':
+      pass
+    else:
+      self.tree_dark()
 
   def send_frame(self,frame): 
     """ send the following frame """
@@ -156,6 +186,7 @@ class activeTree(object):
     if self.imrow >= self.imd.y:
       #return
       self.imrow = 0
+      self.mode = 'generate'
       print "image sent at " + repr(default_timer())
     r = self.imrow
     self.interc += 1
@@ -232,7 +263,62 @@ def waitrate(frate):
 
   ticks = default_timer()
 
+############################ message handler, where the interactivity happens
+def handle_message(msg,tree):
+  """got a message, deal with it"""
+  try:
+    func = msg['function'][0].strip("'")
+  except KeyError:
+    logger.debug("Badly formed URL, skipping")
+    return 'Badly formed URL'
+  
+  print "function: " + repr(func)
+  if func == 'test':
+    tree.mode = 'test'
+    cstr = msg['colors'][0].strip("'")
+    colors =  struct.unpack('BBB',cstr.decode('hex'))
 
+                #print repr(colors)
+    pd = int(msg['p1'][0]) - 1
+    lm = int(msg['p2'][0]) - 1
+    br = int(msg['p3'][0]) - 1
+          # for i in range(0,256,3):
+
+          #result = tree.do_test(colors,pd,lm,br)
+    tree.cef = 1
+    return 'test OK'
+  elif func == 'sparkle':
+    tree.mode = 'generate'
+    tree.cef = 0
+
+    cstr = msg['colors'][0].strip("'")
+    c =  struct.unpack('BBB',cstr.decode('hex'))
+    hue = colorsys.rgb_to_hsv(c[0]/255.0,c[1]/255.0,c[2]/255.0)
+    tree.hue = hue[0]
+    tree.speed = int(msg['speed'][0]) 
+    tree.interc = 0
+    tree.framec = int(tree.speed/5)
+    myP.send("new hue %f" % tree.hue)
+        #tree.uni0.send_buffer()
+        # call this repeatedly to send the latest data
+  elif func == 'winter':
+    tree.mode = 'image'
+    tree.set_image(0)
+  elif func == 'spring':
+    tree.mode = 'image'
+    tree.set_image(1)
+  elif func == 'summer':
+    tree.mode = 'image'
+    tree.set_image(2)
+          #tree.current_pal = 'grayscale'
+  elif func == 'autumn':
+    tree.mode = 'image'
+    tree.set_image(3)
+          #tree.current_pal = 'hsv'
+  return "OK"
+
+
+### listener: main loop and respond to commands
 def listener(myP,foo):
   """ This is started by the parent, listens for commands coming in on 
   queue myP"""
@@ -251,42 +337,13 @@ def listener(myP,foo):
       logger.debug('DMX received "%s"',str(msg))
       sys.stdout.flush()
 
-      try:
-        func = msg['function'][0].strip("'")
-      except KeyError:
-        logger.debug("Badly formed URL, skipping")
-        myP.send('Badly formed URL')
+      if tree.mode == 'image':
+        myP.send('Sorry, busy, try again!')
+      if tree.mode == 'test':
+        myP.send('Sorry, tree is being tested')
       else:
-        print "function: " + repr(func)
-        if func == 'test':
-          cstr = msg['colors'][0].strip("'")
-          colors =  struct.unpack('BBB',cstr.decode('hex'))
-
-                #print repr(colors)
-          pd = int(msg['p1'][0]) - 1
-          lm = int(msg['p2'][0]) - 1
-          br = int(msg['p3'][0]) - 1
-          # for i in range(0,256,3):
-
-          #result = tree.do_test(colors,pd,lm,br)
-          tree.cef = 1
-          myP.send('changed')
-        elif func == 'sparkle':
-          tree.cef = 0
-          cstr = msg['colors'][0].strip("'")
-          c =  struct.unpack('BBB',cstr.decode('hex'))
-          hue = colorsys.rgb_to_hsv(c[0]/255.0,c[1]/255.0,c[2]/255.0)
-          tree.hue = hue[0]
-          tree.speed = int(msg['speed'][0]) 
-          tree.interc = 0
-          tree.framec = int(tree.speed/5)
-          myP.send("new hue %f" % tree.hue)
-        #tree.uni0.send_buffer()
-        # call this repeatedly to send the latest data
-        elif func == 'winter':
-          tree.current_pal = 'grayscale'
-        elif func == 'summer':
-          tree.current_pal = 'hsv'
+        result = handle_message(msg,tree)
+        myP.send(result)
 
 
     tree.update()        
