@@ -53,8 +53,8 @@
                 	
                 	<div><input type="text" id="color" name="color" value="#FF0000" /></div>
                   <div class="colorpicker-cont">
-        					  <div id="colorpicker"></div>
-        					</div>
+        	    <div id="colorpicker"></div>
+        	  </div>
               
                   <dl>
                     <dt>Speed</dt>
@@ -79,7 +79,7 @@
                       </div>
                       <br/>-->
                       
-                  <input type="submit" class="btn btn-default" value="Start" />
+                      <input type="submit" class="btn btn-default" value="Start" />
                       
                 </form>
 
@@ -91,14 +91,20 @@
             </div>
             <div class="tab-pane" id="patterns">
               
-              <ul>
-                <li><button type="button" class="btn btn-default" id="btn-summer">Summer</button></li>
-                <li><button type="button" class="btn btn-default" id="btn-autumn">Autumn</button></li>
-                <li><button type="button" class="btn btn-default" id="btn-winter">Winter</button></li>
-                <li><button type="button" class="btn btn-default" id="btn-spring">Spring</button></li>
+	      <ul class="actions">
+		<li><button type="button" class="btn btn-default" id="btn-active" data-value="summer">Summer</button></li>
+		<li><button type="button" class="btn btn-default" id="btn-active" data-value="winter">Winter</button></li>
               </ul>
 
             </div>
+
+            <form method='post' action='./dummy' id="controls-form"> 
+              <input type='hidden' name='smooth'/>	      
+	      <dl>
+		    <dt>Smooth</dt>
+		    <dd><div id="smooth" class="slider"></div></dd>
+		    </dl>
+		</form>
             <div class="tab-pane" id="about">
             
               About              

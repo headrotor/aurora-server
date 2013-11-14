@@ -44,6 +44,60 @@ def info(title):
         print 'parent process:', os.getppid()
     print 'process id:', os.getpid()
 
+
+class OpTimer(object):
+    """ Timer and timeout functions. Must call update() regularly!"""
+    def __init__(self):
+        self.time_remain = 0.0          # running  time remaining, seconds
+        self.idle = True
+        self.timeout = False            # timout flag, clear with stop()
+        self.start_time = self.last_time = self.the_time()
+        self.verbose = True
+
+    def the_time(self):
+        """Wrapper for time.clock or time.time which are os-dependent"""
+        return default_timer()
+
+    def update(self):
+        """Update timer, must call this periodically from timer 
+        callback 
+        """
+        now = self.the_time()
+        delta_time = now - self.last_time
+        if self.idle is False:
+          self.time_remain -= delta_time
+          if self.verbose:
+            print "evt timer running at " + str(self.time_remain)
+            sys.stdout.flush()
+          if self.time_remain < 0:
+            print "timer timeout"
+            # set timout flag, clear/acknowledge with self.stop()
+            self.timeout = True
+          else:
+            self.last_time = now   
+        return delta_time
+
+    def start(self,remain):
+        """ Start the countdown timer for time seconds"""
+        self.timeout = False
+        self.idle = False
+        self.time_remain = remain
+        self.last_time = self.start_time = self.the_time()
+        if self.verbose:
+            print "start clock for %f secs" % float(remain)
+            sys.stdout.flush()
+
+    def stop(self):
+      self.idle = True
+      self.timeout = False
+
+    def get_time_elapsed(self):
+        if self.idle:
+            return 0.0
+        else:
+            return self.the_time() - self.start_time
+
+
 class activeTree(object):
   """ class for doing all the DMX generation stuff"""
 
@@ -51,6 +105,7 @@ class activeTree(object):
     self.tree = auroratree
     self.state = "idle"
     self.cfg = ConfigParser.RawConfigParser()
+    self.timer = OpTimer()
 
     # load all the images into an image dict
     self.imgs = self.load_images("/home/aurora/aurora-server/images")
@@ -164,14 +219,20 @@ class activeTree(object):
   def update(self):
     """ call this repeatedly to generate new data and update things"""
 
+    self.timer.update()  
+    if self.timer.timeout: # got timer flag
+      print "got timeout flag"
+      self.timer.stop()
+      self.set_mode('default')
+
     if self.mode == 'image':
       self.update_image()
     elif self.mode == 'generate':
       self.update_iter()
     elif self.mode == 'test':
       pass
-    else:
-      self.tree_dark()
+
+
 
   def send_frame(self,frame): 
     """ send the following frame """
@@ -215,11 +276,6 @@ class activeTree(object):
     self.im_row = self.im_row + 1
     if self.im_row >= self.imd.y:
       self.im_row = 0
-      if self.img_count is not None:
-        self.img_count += -1
-        if self.img_count <= 0:
-          print "last image sent at " + repr(default_timer())
-          self.set_mode('default')
 
     r = self.im_row
     self.interc += 1
@@ -280,8 +336,13 @@ class activeTree(object):
         print "Changing hue from %f to %f" % (self.hue,hue)
 
 
-  def set_mode(self,function):
+  def set_mode(self,function,duration=None):
     """ named modes read mode from config file, set tree commands """
+
+    if function != 'default':
+      if duration is not None:
+        self.timer.start(duration)
+
     newmode = None
     try:
       newmode = self.cfg.get(function,'mode')
@@ -296,16 +357,20 @@ class activeTree(object):
 
     self.mode = newmode
 
-
-
-    try:
-      interc = self.cfg.getfloat(function,'interc')
-    except ConfigParser.NoOptionError:
-      logger.info("No config option for %s" % 'interc')
+    smooth = None
+    if smooth is None:
+      try:
+        framec = self.cfg.getfloat(function,'framec')
+      except ConfigParser.NoOptionError:
+        logger.info("No config option for %s" % 'framec')
+      else:
+        self.interc = 0 # count for interpolation
+        self.framec = framec # if non-zero, interpolate new frame
+        print "new interp length = %d" % int(self.framec)
     else:
-      self.interc = interc # count for interpolation
-      self.framec = 0 # if non-zero, interpolate new frame
-      print "new interp length = %d" % int(self.interc)
+      self.interc = 0 # count for interpolation
+      self.framec = int(smooth)
+      print "new interp length = %d" % int(self.framec)
 
     try:
       self.hue = self.cfg.getfloat(function,'hue')
@@ -319,19 +384,24 @@ class activeTree(object):
     else:
       self.fcount = fcount
 
-    print "new mode %s hue %d" % (self.mode, self.hue) 
+    print "new mode %s hue %d" % (function, self.hue) 
     if self.mode == 'image':
       try:
         imname = self.cfg.get(function,'image')
-        self.img_count = self.cfg.getint(function,'img_count')
       except ConfigParser.NoOptionError:
         logger.info("Error configuring image for mode %s" % self.mode)
         return
+
       self.set_image(imname)
 
-      print "new image %s count %d " % (imname, self.img_count)
-      if self.img_count == 0:
-        self.img_count = None #@ none means loop forever
+      try:
+        self.img_count = self.cfg.getint(function,'img_count')
+      except ConfigParser.NoOptionError:
+        pass
+      else:
+        print "new image %s count %d " % (imname, self.img_count)
+        if self.img_count == 0:
+          self.img_count = None #@ none means loop forever
     elif self.mode == 'generate':
       try:
         effect = self.cfg.getint(function,'effect_id')
@@ -397,7 +467,15 @@ def handle_message(msg,tree):
         #tree.uni0.send_buffer()
         # call this repeatedly to send the latest data
   elif func == 'winter':
-    tree.set_mode('winter')
+    smoothparam = int(msg['smooth'][0]) 
+    print "got smoothparam %d" % smoothparam
+    tree.set_mode('winter',duration=10)
+
+  elif func == 'crash':
+    # crash the server to test restart
+    logging.info("Test crash!")
+    assert(False)
+
   elif func == 'spring':
     tree.set_mode('spring')
   elif func == 'summer':

@@ -115,7 +115,9 @@ function submit_request(){
 function submit_button(the_button){
     var params = {};
     params["function"] = the_button;
+    params["smooth"] = $( "#smooth" ).slider( "option", "value" );
     ajax_request(params)
+
 }
 
 //function submit_test(){
@@ -146,7 +148,8 @@ function submit_button(the_button){
 $(function() {
     $('#speed').slider({ value: 51 });
     $('#random').slider({ value: 51 });
-    $('#speed, #random').draggable();
+    $('#smooth').slider({ value: 51 });
+    $('#speed, #random','#smooth').draggable();
 
 //$('#red, #green, #blue, #speed').draggable();
   //  $( "#red" ).slider( "value", 255 );
@@ -186,50 +189,15 @@ $(function() {
 	});
 	
 
-	//button event handlers
-    $('#btn-summer').click(function(e) {
+    $('.actions button').click(function(e) {
 	e.preventDefault();
-	submit_button("summer")
-	console.log('sum');
-	console.log(e);
-		
-    });
-    $('#btn-autumn').click(function(e) {
-	e.preventDefault();
-	submit_button("autumn")
-	console.log('aut');
-	console.log(e);
-		
-    });
-    $('#btn-winter').click(function(e) {
-	e.preventDefault();
-	window.alert(e);
-	submit_button("winter")
-	console.log('win');
-	console.log(e);
-		
-    });
-    $('#btn-spring').click(function(e) {
-	e.preventDefault();
-	window.alert(e);
-	submit_button("spring")
-	console.log('spr');
-	console.log(e);
-		
-    });
-	
+	var thisButtonValue = $(this).data('value'); 
 
-
+	//window.alert(thisButtonValue)
+	submit_button(thisButtonValue);
+    });
 
 
 
 });
-
-
-// $(function(){
-//     $("#inp1").keyup(function(){
-//         alert($(this).val());
-//     });
-
-// });
 
