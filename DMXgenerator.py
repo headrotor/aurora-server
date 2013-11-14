@@ -60,8 +60,11 @@ class activeTree(object):
     self.brightness = 0.5
     self.hue = 0.0              # hue offset
     self.saturation = 1.0
+
     self.cfgfile = "defaults.cfg"
-    self.update_config() # read config options from file
+
+
+
     # instantiate iterative effect
     self.effects = []  # array of effects from  generative.py
     size = (22,15)
@@ -71,26 +74,30 @@ class activeTree(object):
     P = generative.Palettes()
     # palettes are a dict, indexed by name
     self.palettes = P.get_all()
-    self.current_pal = 'grayscale'
-    self.current_pal = 'testpal'
-    #self.test_pal = P.get_cmap_image('./palettes/testpal.png')
-    #self.current_pal = self.test_pal
 
-    print "avail palettes"
+    print "avail palettes:"
     for key in self.palettes:
-      print "key " + repr(key)
+      print repr(key)
 
-    print "avail images"
+    print "avail images:"
     for key in self.imgs:
-      print "key " + repr(key)
+      print repr(key)
+
+    self.mode = None
+    self.cef = None
+    self.current_pal = None
+    self.interc = 0 # count for interpolation
+    self.framec = None # if non-zero, interpolate new frame
+
+    self.update_config() # read config options from file
+    # set default mode, etc. from config file
+    self.set_mode('default')
     
     # tree state machine: idle (dark), image, generative 
-    self.mode = 'generate'
-    self.cef = 1 # current effect
-    self.old_frame = self.effects[self.cef].get_frame()
-    self.new_frame = self.effects[self.cef].get_frame()
-    self.interc = 0 # count for interpolation
-    self.framec = 3 # if non-zero, interpolate new frame
+    self.old_frame = self.effects[0].get_frame()
+    self.new_frame = self.effects[0].get_frame()
+
+
 
   def load_images(self, imgdir):
     """ scan image directory, load images """
@@ -112,10 +119,20 @@ class activeTree(object):
     return imgs
 
   def set_image(self, key):
-    self.imd = self.imgs[key]
-    print "setting image to " + key
-    self.im_row = 0
+    if key in self.imgs:
+      self.imd = self.imgs[key]
+      print "setting image to " + key
+      self.im_row = 0
+    else:
+      logger.info("Can't find image named %s" % key)
+      print "Can't find image named %s" % key
 
+  def set_palette(self, key):
+    if key in self.palettes:
+      self.current_pal = self.palettes[key]
+      print "setting palette to " + key
+    else:
+      logger.info("Can't find palette named %s" % key)      
 
   def tree_dark(self):
     """ Turn all branches this color"""
@@ -163,8 +180,8 @@ class activeTree(object):
       for limb in pod.limbs:
         for j, br in enumerate(limb.branches):
           index = int(frame[i+1][j+1]) # skip borders used for padding
-          p = self.palettes[self.current_pal]
-          c = p[index]
+          c = self.current_pal[index]
+
           #hsv = list(colorsys.rgb_to_hsv(c[0],c[1],c[2]))
           
           #morph color here with brightness and hue shift
@@ -201,8 +218,8 @@ class activeTree(object):
       if self.img_count is not None:
         self.img_count += -1
         if self.img_count <= 0:
-          self.mode = 'generate'
           print "last image sent at " + repr(default_timer())
+          self.set_mode('default')
 
     r = self.im_row
     self.interc += 1
@@ -265,8 +282,9 @@ class activeTree(object):
 
   def set_mode(self,function):
     """ named modes read mode from config file, set tree commands """
+    newmode = None
     try:
-      self.mode = self.cfg.get(function,'mode')
+      newmode = self.cfg.get(function,'mode')
     except ConfigParser.NoSectionError:
       logger.error("No config section named %s" % function)
       print "No config section named %s" % function
@@ -276,15 +294,53 @@ class activeTree(object):
       print ("No config option named %s in section %s" % ('mode',function))
       return
 
-    self.hue = self.cfg.getfloat(function,'hue')
+    self.mode = newmode
+
+
+
+    try:
+      interc = self.cfg.getfloat(function,'interc')
+    except ConfigParser.NoOptionError:
+      logger.info("No config option for %s" % 'interc')
+    else:
+      self.interc = interc # count for interpolation
+      self.framec = 0 # if non-zero, interpolate new frame
+      print "new interp length = %d" % int(self.interc)
+
+    try:
+      self.hue = self.cfg.getfloat(function,'hue')
+    except ConfigParser.NoOptionError:
+      logger.info("No config option named %s" % 'hue')
+
+    try:
+      fcount = self.cfg.getint(function,'fcount')
+    except ConfigParser.NoOptionError:
+      logger.info("No config option %s" % 'fcount')
+    else:
+      self.fcount = fcount
+
     print "new mode %s hue %d" % (self.mode, self.hue) 
     if self.mode == 'image':
-      imname = self.cfg.get(function,'image')
+      try:
+        imname = self.cfg.get(function,'image')
+        self.img_count = self.cfg.getint(function,'img_count')
+      except ConfigParser.NoOptionError:
+        logger.info("Error configuring image for mode %s" % self.mode)
+        return
       self.set_image(imname)
-      self.img_count = self.cfg.getint(function,'img_count')
+
       print "new image %s count %d " % (imname, self.img_count)
       if self.img_count == 0:
         self.img_count = None #@ none means loop forever
+    elif self.mode == 'generate':
+      try:
+        effect = self.cfg.getint(function,'effect_id')
+        palette = self.cfg.get(function,'palette')
+      except ConfigParser.NoOptionError:
+        logger.info("Error configuring generator for mode %s" % self.mode)
+        return
+      self.cef = effect
+      self.set_palette(palette)
 
 def waitrate(frate):
   """ Wait for 1/framerate of a second since the last time we called"""
@@ -374,8 +430,8 @@ def listener(myP,foo):
       logger.debug('DMX received "%s"',str(msg))
       sys.stdout.flush()
 
-      if tree.mode == 'image':
-        myP.send('Sorry, busy, try again!')
+      #if tree.mode == 'image':
+      #  myP.send('Sorry, busy, try again!')
       if tree.mode == 'test':
         myP.send('Sorry, tree is being tested')
       else:

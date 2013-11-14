@@ -55,13 +55,16 @@ class DMXUniverse(object):
         self.portname = portname
         self.verbose = False
         self.check = True  # False to disable range assertions
-
         # make the byte buffer that will hold the output data
         nullstr = u'00 ' * 513  # must start with null byte
         self.buf = bytearray.fromhex(nullstr)
 
         # output queue for serial port thread
         self.queue = Queue.Queue()
+
+        if portname == 'null':
+            self.s = False
+            return
 
         self.s = open(portname,'w')
         #self.s = serial.Serial(port=portname, baudrate=38400,
