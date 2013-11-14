@@ -2,13 +2,24 @@
 import random
 import sys
 import numpy
-import pygame
 import colorsys
 import os
 import PIL
-from pygame.locals import *
-import matplotlib.pyplot as plt
-import matplotlib.colors
+
+PYGAME_OK = True
+try:
+    import pygame
+except ImportError:
+    PYGAME_OK = False
+
+MATPLOT_OK = True
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.colors
+except ImportError:
+    MATPLOT_OK = False
+
+
 
 # local classes:
 import imagemunger
@@ -22,9 +33,11 @@ class Palettes():
     def get_all(self):
         """ generate all palettes and return in a list"""
         pals = {}
-        pals['grayscale'] = self.grayscale()
-        for name in self.qual_names:
-            pals[name] = self.get_cmap(name)
+        if MATPLOT_OK:
+            pals['grayscale'] = self.grayscale()
+
+            for name in self.qual_names:
+                pals[name] = self.get_matplot_cmap(name)
 
         self.get_all_cmaps("/home/aurora/aurora-server/palettes/",pals)
             
@@ -38,7 +51,7 @@ class Palettes():
         cmap[bstep:, 2] = cmap[:-bstep, 0]
         return cmap  
 
-    def get_cmap(self,cmap_name):
+    def get_matplot_cmap(self,cmap_name):
         cmap=plt.get_cmap(cmap_name)
         cmap = cmap(range(256))
         #print repr(cmap)

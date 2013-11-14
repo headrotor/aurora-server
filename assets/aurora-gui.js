@@ -185,6 +185,7 @@ $(function() {
 		submit_request();
 	});
 	
+
 	//button event handlers
     $('#btn-summer').click(function(e) {
 	e.preventDefault();
@@ -217,6 +218,10 @@ $(function() {
 		
     });
 	
+
+
+
+
 
 });
 

@@ -52,9 +52,8 @@ class activeTree(object):
     self.state = "idle"
     self.cfg = ConfigParser.RawConfigParser()
 
-
     # load all the images into an image dict
-    self.imgs = self.load_images("/home/aurora/aurora-server/palettes")
+    self.imgs = self.load_images("/home/aurora/aurora-server/images")
     self.im_row = 0  # image row counter
     self.img_count = 1  # play images this many times before returning
 
@@ -70,7 +69,7 @@ class activeTree(object):
     self.effects.append(generative.WaveEqn(size))
 
     P = generative.Palettes()
-    # palettes are a dict, inexed by name
+    # palettes are a dict, indexed by name
     self.palettes = P.get_all()
     self.current_pal = 'grayscale'
     self.current_pal = 'testpal'
@@ -264,6 +263,29 @@ class activeTree(object):
         print "Changing hue from %f to %f" % (self.hue,hue)
 
 
+  def set_mode(self,function):
+    """ named modes read mode from config file, set tree commands """
+    try:
+      self.mode = self.cfg.get(function,'mode')
+    except ConfigParser.NoSectionError:
+      logger.error("No config section named %s" % function)
+      print "No config section named %s" % function
+      return
+    except ConfigParser.NoOptionError:
+      logger.info("No config option named %s" % 'mode')
+      print ("No config option named %s in section %s" % ('mode',function))
+      return
+
+    self.hue = self.cfg.getfloat(function,'hue')
+    print "new mode %s hue %d" % (self.mode, self.hue) 
+    if self.mode == 'image':
+      imname = self.cfg.get(function,'image')
+      self.set_image(imname)
+      self.img_count = self.cfg.getint(function,'img_count')
+      print "new image %s count %d " % (imname, self.img_count)
+      if self.img_count == 0:
+        self.img_count = None #@ none means loop forever
+
 def waitrate(frate):
   """ Wait for 1/framerate of a second since the last time we called"""
   global ticks
@@ -319,20 +341,18 @@ def handle_message(msg,tree):
         #tree.uni0.send_buffer()
         # call this repeatedly to send the latest data
   elif func == 'winter':
-    tree.mode = 'image'
-    tree.set_image(0)
+    tree.set_mode('winter')
   elif func == 'spring':
-    tree.mode = 'image'
-    tree.set_image(1)
+    tree.set_mode('spring')
   elif func == 'summer':
-    tree.mode = 'image'
-    tree.set_image(2)
+    tree.set_mode('summer')
           #tree.current_pal = 'grayscale'
   elif func == 'autumn':
-    tree.mode = 'image'
-    tree.set_image(3)
+    tree.set_mode('autumn')
           #tree.current_pal = 'hsv'
   return "OK"
+
+
 
 
 ### listener: main loop and respond to commands
