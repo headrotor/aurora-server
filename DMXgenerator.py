@@ -53,8 +53,10 @@ class activeTree(object):
     self.cfg = ConfigParser.RawConfigParser()
 
 
-    self.load_images()
-    self.imrow = 0  # image row counter
+    # load all the images into an image dict
+    self.imgs = self.load_images("/home/aurora/aurora-server/palettes")
+    self.im_row = 0  # image row counter
+    self.img_count = 1  # play images this many times before returning
 
     self.brightness = 0.5
     self.hue = 0.0              # hue offset
@@ -68,40 +70,52 @@ class activeTree(object):
     self.effects.append(generative.WaveEqn(size))
 
     P = generative.Palettes()
-    self.palletes = P.get_all()
+    # palettes are a dict, inexed by name
+    self.palettes = P.get_all()
     self.current_pal = 'grayscale'
+    self.current_pal = 'testpal'
+    #self.test_pal = P.get_cmap_image('./palettes/testpal.png')
+    #self.current_pal = self.test_pal
 
+    print "avail palettes"
+    for key in self.palettes:
+      print "key " + repr(key)
+
+    print "avail images"
+    for key in self.imgs:
+      print "key " + repr(key)
+    
     # tree state machine: idle (dark), image, generative 
-    self.mode = 'idle' # idle or image to do generative or canned animations
-
+    self.mode = 'generate'
     self.cef = 1 # current effect
     self.old_frame = self.effects[self.cef].get_frame()
     self.new_frame = self.effects[self.cef].get_frame()
     self.interc = 0 # count for interpolation
     self.framec = 3 # if non-zero, interpolate new frame
 
-
-
-  def load_images(self):
+  def load_images(self, imgdir):
     """ scan image directory, load images """
-    imgdir = "./images"
 
     # make list of image files 
     self.imfiles = []
-    self.imgs = []
+    imgs = {}
     for f in os.listdir(imgdir):
       fname = os.path.join(imgdir, f)
+      print fname
       if os.path.isfile(fname):
-        self.imfiles.append(fname)
-        img = imagemunger.ImageData(fname, len(self.tree.branches))
-        self.imgs.append(img)
-        print 'loading image "%s"' % fname 
-    self.imd = img
+          base, ext = os.path.splitext(os.path.basename(fname))
+          #base = os.path.basename(fname)
+          print " b: %s e: %s" % (base, ext)
+          if ext.lower() == '.png':
+            img = imagemunger.ImageData(fname, len(self.tree.branches))
+            imgs[base] = img
+            print 'loading image "%s"' % base 
+    return imgs
 
-  def set_image(self,n):
-    self.imd = self.imgs[n]
-    print "setting image to " + self.imfiles[n]
-    self.row = 0
+  def set_image(self, key):
+    self.imd = self.imgs[key]
+    print "setting image to " + key
+    self.im_row = 0
 
 
   def tree_dark(self):
@@ -150,7 +164,7 @@ class activeTree(object):
       for limb in pod.limbs:
         for j, br in enumerate(limb.branches):
           index = int(frame[i+1][j+1]) # skip borders used for padding
-          p = self.palletes[self.current_pal]
+          p = self.palettes[self.current_pal]
           c = p[index]
           #hsv = list(colorsys.rgb_to_hsv(c[0],c[1],c[2]))
           
@@ -182,13 +196,16 @@ class activeTree(object):
 
   def update_image(self):
     """Get next row of image file, and do it """
-    self.imrow = self.imrow + 1
-    if self.imrow >= self.imd.y:
-      #return
-      self.imrow = 0
-      self.mode = 'generate'
-      print "image sent at " + repr(default_timer())
-    r = self.imrow
+    self.im_row = self.im_row + 1
+    if self.im_row >= self.imd.y:
+      self.im_row = 0
+      if self.img_count is not None:
+        self.img_count += -1
+        if self.img_count <= 0:
+          self.mode = 'generate'
+          print "last image sent at " + repr(default_timer())
+
+    r = self.im_row
     self.interc += 1
     if self.interc >= self.framec:
       self.interc = 0
@@ -203,7 +220,6 @@ class activeTree(object):
       self.tree.setBranchInt(brindex,pixel)
     self.tree.TreeSend()
 
-
   def update_iter(self):
     """ in generative mode, calc latest pattern and and do it..."""
     self.interc += 1
@@ -213,7 +229,6 @@ class activeTree(object):
       self.old_frame = self.new_frame
       self.new_frame = self.effects[self.cef].get_frame()
       #print repr(self.new_frame[1])
-
 
     frame = self.old_frame
     if self.framec > 0:
@@ -226,9 +241,6 @@ class activeTree(object):
     self.send_frame(frame)
     self.tree.TreeSend()
     
-
-  def set_colormap(self,colormap):
-    pass
 
   def update_config(self):
     """read (or reread) config file in case anything has changed"""
@@ -264,6 +276,11 @@ def waitrate(frate):
   ticks = default_timer()
 
 ############################ message handler, where the interactivity happens
+# two classes of patterns: generative and images
+# generative patterns run forever, images run for self.img_count of 
+# iterations or forever if self.img_count is None
+
+
 def handle_message(msg,tree):
   """got a message, deal with it"""
   try:

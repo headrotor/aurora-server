@@ -3,9 +3,15 @@ import random
 import sys
 import numpy
 import pygame
+import colorsys
+import os
+import PIL
 from pygame.locals import *
 import matplotlib.pyplot as plt
 import matplotlib.colors
+
+# local classes:
+import imagemunger
 
 class Palettes():
 
@@ -19,6 +25,9 @@ class Palettes():
         pals['grayscale'] = self.grayscale()
         for name in self.qual_names:
             pals[name] = self.get_cmap(name)
+
+        self.get_all_cmaps("/home/aurora/aurora-server/palettes/",pals)
+            
         return pals
 
     def flame(self):
@@ -49,6 +58,32 @@ class Palettes():
 
         cmap = matplotlib.colors.LinearSegmentedColormap('foo',segmentdata)
         return [ cmap(1.*i/256) for i in range(256)]
+
+    def get_cmap_image(self, fname):
+        img = imagemunger.ImageData(fname, 256)        
+        row = img.getrow(0)
+        cmap_out = []
+        for c in row:
+            #print repr(c)
+            rgb = colorsys.hsv_to_rgb(c[0]/255.0,c[1]/255.0,c[2]/255.0)
+            #print repr(rgb)
+            cmap_out.append((int(rgb[0]*255),int(rgb[1]*255),int(rgb[2]*255)))
+        return cmap_out
+
+
+    def get_all_cmaps(self,imgdir,cmap_list): 
+       
+        for f in os.listdir(imgdir):
+            fname = os.path.join(imgdir, f)
+            print fname
+            if os.path.isfile(fname):
+                base, ext = os.path.splitext(os.path.basename(fname))
+          #base = os.path.basename(fname)
+                print " b: %s e: %s" % (base, ext)
+                if ext.lower() == '.png':
+                    cmap_list[base] = self.get_cmap_image(fname)
+                    print "loading colormap from %s" % fname
+
 
 class Colormorph():
 
