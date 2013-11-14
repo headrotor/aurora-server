@@ -9,7 +9,7 @@
 # CelestialAudio DMX-32
 
 import sys
-import serial
+#import serial
 
 # import struct
 
