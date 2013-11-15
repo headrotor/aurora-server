@@ -129,13 +129,18 @@ class activeTree(object):
     P = generative.Palettes()
     # palettes are a dict, indexed by name
     self.palettes = P.get_all()
+    self.pi = 0          #  current pallete
 
     print "avail palettes:"
+    self.palette_list = []
     for key in self.palettes:
+      self.palette_list.append(key)
       print repr(key)
 
     print "avail images:"
+    self.pattern_list = []
     for key in self.imgs:
+      self.pattern_list.append(key)
       print repr(key)
 
     self.mode = None
@@ -188,6 +193,19 @@ class activeTree(object):
       print "setting palette to " + key
     else:
       logger.info("Can't find palette named %s" % key)      
+
+  def step_palette(self,step):
+    self.pi += step
+    listlen = len(self.palette_list)
+    if self.pi >= listlen:
+      self.pi -= listlen
+    if self.pi < 0:
+      self.pi += listlen
+    print "active palette index (%d)" % self.pi
+    print "active palette is now " + self.palette_list[self.pi]
+    self.set_palette(self.palette_list[self.pi])
+
+
 
   def tree_dark(self):
     """ Turn all branches this color"""
@@ -313,6 +331,8 @@ class activeTree(object):
     self.send_frame(frame)
     self.tree.TreeSend()
     
+
+                      
 
   def update_config(self):
     """read (or reread) config file in case anything has changed"""
@@ -463,13 +483,14 @@ def handle_message(msg,tree):
     tree.speed = int(msg['speed'][0]) 
     tree.interc = 0
     tree.framec = int(tree.speed/5)
-    myP.send("new hue %f" % tree.hue)
+    return("new hue %f" % tree.hue)
         #tree.uni0.send_buffer()
         # call this repeatedly to send the latest data
   elif func == 'winter':
-    smoothparam = int(msg['smooth'][0]) 
-    print "got smoothparam %d" % smoothparam
-    tree.set_mode('winter',duration=10)
+    #smoothparam = int(msg['smooth'][0]) 
+    #print "got smoothparam %d" % smoothparam
+    #tree.set_mode('winter',duration=10)
+    tree.step_palette(-1)
 
   elif func == 'crash':
     # crash the server to test restart
@@ -479,11 +500,23 @@ def handle_message(msg,tree):
   elif func == 'spring':
     tree.set_mode('spring')
   elif func == 'summer':
-    tree.set_mode('summer')
-          #tree.current_pal = 'grayscale'
+    #tree.set_mode('summer')
+    tree.step_palette(1)
+
   elif func == 'autumn':
-    tree.set_mode('autumn')
+    pass
+    #tree.set_mode('autumn')
+
+  elif func == 'nextpal':
+    tree.step_palette(1)
+
+  elif func == 'prevpal':
+    tree.step_palette(-1)
+
+  else:
+    print "unhandled function 'func', ignoring"
           #tree.current_pal = 'hsv'
+
   return "OK"
 
 
@@ -500,6 +533,7 @@ def listener(myP,foo):
   # makes an interactive tree object
   tree = activeTree(auroratree)
 
+  myP.send('active!')
   while(1):
     if myP.poll():
       tree.update_config() # read config options from file
