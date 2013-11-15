@@ -12,7 +12,13 @@
     font-weight: 700;
     src: local("Oswald Bold"), local("Oswald-Bold"), url("oswald-bold.woff") format("woff");
 }
-
+/*
+@font-face{
+	font-family:'Futura';
+	src:url('./glyphicons-halflings-regular.eot');
+	src:url('./glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'),url('./glyphicons-halflings-regular.woff') format('woff'),url('./glyphicons-halflings-regular.ttf') format('truetype'),url('./glyphicons-halflings-regular.svg#glyphicons_halflingsregular') format('svg')
+}
+*/
 body {
     font-family: 'Oswald', sans-serif;
     color: #A0A0A0;
@@ -49,12 +55,12 @@ ul {
 	margin: 0px auto;
 }
 
-#red, #green, #blue, #hue, #speed, #random {
+#red, #green, #blue, #hue, #speed, #random, #smooth-generative, #smooth-pattern {
    
     width: 300px;
     margin: 15px;
   }
-  #swatch {
+#swatch {
     width: 300px;
     height: 50px;
     margin-top: 20px;
@@ -68,20 +74,23 @@ ul {
 #blue .ui-slider-range { background: #729fcf; }
 #blue .ui-slider-handle { border-color: #729fcf; }
 
-#patterns ul {
+.container {
 	padding: 0;
 }
-#patterns ul li {
+#patterns ul, #generative ul {
+	padding: 0;
+}
+#patterns ul li, #generative ul li {
 	padding: 10px 0;
 }
-#patterns ul li:first-child {
+#patterns ul li:first-child, #generative ul li:first-child {
 	padding-top: 0;
 }
 .aurora-main .tab-content {
 	padding: 20px 0;
 	text-align: center;
 }
-#controls-form {
+#controls-form, #patterns-form, #generative-form {
 	display: inline-block;
 }
 .colorpicker-cont {
