@@ -104,7 +104,7 @@ function log(msg) {
 
 function submit_request(){
     var params = {};
-    params["function"] = "sparkle";
+    params["function"] = "color";
     params["speed"] = $( "#speed" ).slider( "option", "value" );
     params["random"] = $( "#random" ).slider( "option", "value" );
 
@@ -114,6 +114,8 @@ function submit_request(){
 	params["colors"] = $('#color').val().slice(1);
     ajax_request(params)
 }
+
+
 
 function submit_button(the_button, the_action){
     var params = {};

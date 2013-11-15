@@ -458,7 +458,8 @@ def handle_message(msg,tree):
     return 'Badly formed URL'
   
   print "function: " + repr(func)
-  if func == 'test':
+
+  if func == 'color':
     tree.mode = 'test'
     cstr = msg['colors'][0].strip("'")
     colors =  struct.unpack('BBB',cstr.decode('hex'))
@@ -471,41 +472,42 @@ def handle_message(msg,tree):
 
           #result = tree.do_test(colors,pd,lm,br)
     tree.cef = 1
-    return 'test OK'
-  elif func == 'sparkle':
-    tree.mode = 'generate'
-    tree.cef = 0
+    return 'color OK'
 
-    cstr = msg['colors'][0].strip("'")
-    c =  struct.unpack('BBB',cstr.decode('hex'))
-    hue = colorsys.rgb_to_hsv(c[0]/255.0,c[1]/255.0,c[2]/255.0)
-    tree.hue = hue[0]
-    tree.speed = int(msg['speed'][0]) 
-    tree.interc = 0
-    tree.framec = int(tree.speed/5)
-    return("new hue %f" % tree.hue)
-        #tree.uni0.send_buffer()
-        # call this repeatedly to send the latest data
+
+### these are the generative functions
+
+  elif func == 'ripple':
+   tree.set_mode(func)
+
+  elif func == 'sparkle':
+   tree.set_mode(func)
+
+  elif func == 'wave':
+   tree.set_mode(func)
+
+  elif func == 'crash':
+   tree.set_mode(func)
+ 
+
+#################### these are the pattern functions
+
   elif func == 'winter':
+   tree.set_mode(func)
     #smoothparam = int(msg['smooth'][0]) 
     #print "got smoothparam %d" % smoothparam
     #tree.set_mode('winter',duration=10)
-    tree.step_palette(-1)
-
-  elif func == 'crash':
-    # crash the server to test restart
-    logging.info("Test crash!")
-    assert(False)
 
   elif func == 'spring':
-    tree.set_mode('spring')
-  elif func == 'summer':
-    #tree.set_mode('summer')
-    tree.step_palette(1)
+    tree.set_mode(func)
 
   elif func == 'autumn':
-    pass
-    #tree.set_mode('autumn')
+    tree.set_mode(func)
+
+  elif func == 'summer':
+    tree.set_mode(func)
+
+#################### palette control
 
   elif func == 'nextpal':
     tree.step_palette(1)
@@ -514,7 +516,7 @@ def handle_message(msg,tree):
     tree.step_palette(-1)
 
   else:
-    print "unhandled function 'func', ignoring"
+    print "unhandled function '%d', ignoring" % func
           #tree.current_pal = 'hsv'
 
   return "OK"
