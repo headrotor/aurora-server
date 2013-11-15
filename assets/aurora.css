@@ -1,5 +1,6 @@
 @charset "utf-8";
 
+/*
 @font-face {
     font-family: "Oswald";
     font-style: normal;
@@ -12,15 +13,17 @@
     font-weight: 700;
     src: local("Oswald Bold"), local("Oswald-Bold"), url("oswald-bold.woff") format("woff");
 }
-/*
+*/
+
 @font-face{
 	font-family:'Futura';
-	src:url('./glyphicons-halflings-regular.eot');
-	src:url('./glyphicons-halflings-regular.eot?#iefix') format('embedded-opentype'),url('./glyphicons-halflings-regular.woff') format('woff'),url('./glyphicons-halflings-regular.ttf') format('truetype'),url('./glyphicons-halflings-regular.svg#glyphicons_halflingsregular') format('svg')
+	src:url('./futurastd-medium-webfont.eot');
+	src:url('./futurastd-medium-webfont.eot?#iefix') format('embedded-opentype'),url('./futurastd-medium-webfont.woff') format('woff'),url('./futurastd-medium-webfont.ttf') format('truetype'),url('./futurastd-medium-webfont.svg') format('svg')
 }
-*/
+
 body {
-    font-family: 'Oswald', sans-serif;
+    /*font-family: 'Oswald', sans-serif;*/
+    font-family: Helvetica, Arial, sans-serif;
     color: #A0A0A0;
     text-align: center;
     background: url('noise.png') #303030;
@@ -32,11 +35,15 @@ a:hover {color:#FFFFFF;}  /* mouse over link */
 a:active {color:#0000FF;}  /* selected link */ 
 
 h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6 {
-	font-family: 'Oswald', sans-serif;
+	/*font-family: 'Oswald', sans-serif;*/
+    font-family: 'Futura', Helvetica, Arial, sans-serif;
+
 }
 
 html, button, input, select, textarea {
-	font-family: 'Oswald', sans-serif;
+	/*font-family: 'Oswald', sans-serif;*/
+    font-family: Helvetica, Arial, sans-serif;
+
 }
 
 ul {
@@ -101,4 +108,24 @@ ul {
 }
 .footer {
 	margin-top: 30px;
+}
+.arrow-right {
+	width: 0; 
+	height: 0; 
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent;
+	
+	border-left: 10px solid #333;
+	display: inline-block;
+}
+
+.arrow-left {
+	width: 0; 
+	height: 0; 
+	border-top: 10px solid transparent;
+	border-bottom: 10px solid transparent; 
+	
+	border-right:10px solid #333;
+	display: inline-block;
+	 
 }
