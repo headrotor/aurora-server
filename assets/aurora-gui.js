@@ -206,11 +206,11 @@ $(function() {
 	//});
 	$('#colorpicker').farbtastic('#color');
 	
-	$('#controls-form').submit(function(e) {
+	$('#color-form').submit(function(e) {
 		e.preventDefault();
 		e.stopPropagation();
 	
-		submit_request();
+		submit_color();
 	});
 	
 

@@ -97,7 +97,7 @@ ul {
 	padding: 20px 0;
 	text-align: center;
 }
-#controls-form, #patterns-form, #generative-form {
+#color-form, #patterns-form, #generative-form {
 	display: inline-block;
 }
 .colorpicker-cont {
