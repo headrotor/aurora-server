@@ -1,29 +1,18 @@
 @charset "utf-8";
 
-/*
-@font-face {
-    font-family: "Oswald";
-    font-style: normal;
-    font-weight: 400;
-    src: local("Oswald Regular"), local("Oswald-Regular"), url("oswald.woff") format("woff");
-}
-@font-face {
-    font-family: "Oswald";
-    font-style: normal;
-    font-weight: 700;
-    src: local("Oswald Bold"), local("Oswald-Bold"), url("oswald-bold.woff") format("woff");
-}
-*/
-
 @font-face{
 	font-family:'Futura';
-	src:url('./futurastd-medium-webfont.eot');
-	src:url('./futurastd-medium-webfont.eot?#iefix') format('embedded-opentype'),url('./futurastd-medium-webfont.woff') format('woff'),url('./futurastd-medium-webfont.ttf') format('truetype'),url('./futurastd-medium-webfont.svg') format('svg')
+	src:url('./fonts/futurastd-medium-webfont.eot');
+	src:url('./fonts/futurastd-medium-webfont.eot?#iefix') format('embedded-opentype'),url('./fonts/futurastd-medium-webfont.woff') format('woff'),url('./fonts/futurastd-medium-webfont.ttf') format('truetype'),url('./fonts/futurastd-medium-webfont.svg') format('svg')
+}
+@font-face{
+	font-family:'Helvetica Neue';
+	src:url('./fonts/helveticaneue-light-webfont.eot');
+	src:url('./fonts/helveticaneue-light-webfont.eot?#iefix') format('embedded-opentype'),url('./fonts/helveticaneue-light-webfont.woff') format('woff'),url('./fonts/helveticaneue-light-webfont.ttf') format('truetype'),url('./fonts/helveticaneue-light-webfont.svg') format('svg')
 }
 
 body {
-    /*font-family: 'Oswald', sans-serif;*/
-    font-family: Helvetica, Arial, sans-serif;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: #A0A0A0;
     text-align: center;
     background: url('noise.png') #303030;
@@ -34,16 +23,16 @@ a:visited {color:#A0A0A0;}  /* visited link */
 a:hover {color:#FFFFFF;}  /* mouse over link */
 a:active {color:#0000FF;}  /* selected link */ 
 
-h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6 {
-	/*font-family: 'Oswald', sans-serif;*/
-    font-family: 'Futura', Helvetica, Arial, sans-serif;
+h1, .h1 {
+	font-family: 'Futura', Helvetica, Arial, sans-serif;
+	text-align: left;
+}
+h2,h3,h4,h5,h6,.h2,.h3,.h4,.h5,.h6 {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 
 }
-
 html, button, input, select, textarea {
-	/*font-family: 'Oswald', sans-serif;*/
-    font-family: Helvetica, Arial, sans-serif;
-
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 ul {
@@ -128,4 +117,14 @@ ul {
 	border-right:10px solid #333;
 	display: inline-block;
 	 
+}
+.about-cont {
+	text-align: left;
+	padding: 0 20px;
+}
+.splash-tree {
+	background: transparent url('./aurora-big.png') no-repeat;
+	width: 287px;
+	height: 287px;
+	background-size: cover;
 }

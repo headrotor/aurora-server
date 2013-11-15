@@ -232,8 +232,12 @@ $(function() {
 	        window.scrollTo(0, 1);
 	    }, 0);
 	});
-
 	
+	//proceed button
+	$('#proceed-btn').click(function(e) {
+		e.preventDefault();
+		$('#patterns-tab').tab('show');
+	});
 
 });
 
