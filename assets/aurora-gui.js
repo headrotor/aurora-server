@@ -102,7 +102,21 @@ function log(msg) {
     }, 0);
 }  
 
-function submit_request(){
+// function submit_request(){
+//     var params = {};
+//     params["function"] = "color";
+//     params["speed"] = $( "#speed" ).slider( "option", "value" );
+//     params["random"] = $( "#random" ).slider( "option", "value" );
+
+//     params["p1"] = $( "#inp1" ).val();
+//     params["foo"] = "bar";
+//     //params["colors"] =finalHex; // will now contain Hex code for selected color like FF0000 for Red, 00FF00 for Green and 0000FF for Blue.
+// 	params["colors"] = $('#color').val().slice(1);
+//     ajax_request(params)
+// }
+
+
+function submit_color(){
     var params = {};
     params["function"] = "color";
     params["speed"] = $( "#speed" ).slider( "option", "value" );
