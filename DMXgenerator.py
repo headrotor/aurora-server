@@ -12,14 +12,13 @@ import time #For the timestamp and sleep function
 import urlparse # decode the messages we are sent
 import colorsys
 import ConfigParser
-
+import random
 
 # local classes
 from modDMXthread import DMXUniverse
 import imagemunger # get tree colors repeatedly from image file
 import generative # iteratively generate tree colours
 import aurora
-import random
 
 import logging
 logger = logging.getLogger(__name__)
@@ -43,7 +42,6 @@ def info(title):
     if hasattr(os, 'getppid'):  # only available on Unix
         print 'parent process:', os.getppid()
     print 'process id:', os.getpid()
-
 
 class OpTimer(object):
     """ Timer and timeout functions. Must call update() regularly!"""
@@ -112,8 +110,9 @@ class activeTree(object):
     self.im_row = 0  # image row counter
     self.img_count = 1  # play images this many times before returning
 
+    # color offset, None for no offset
     self.brightness = 0.5
-    self.hue = 0.0              # hue offset
+    self.hue = None              # hue offset
     self.saturation = 1.0
 
     self.cfgfile = "defaults.cfg"
@@ -206,6 +205,18 @@ class activeTree(object):
     self.set_palette(self.palette_list[self.pi])
 
 
+  def set_smooth(self,smooth):
+    """set smoothness parameter"""
+    self.interc = 0 # count for interpolation
+    self.framec = smooth # if non-zero, interpolate new frame
+    print "new interp length = %d" % int(self.framec)
+
+  def set_color_offset(self,coff):
+    print "setting color offset " + repr(coffset)
+    hsv_off = colorsys.rgb_to_hsv(coff[0]/255.0,coff[1]/255.0,coff[2]/255.0)
+    self.hue = hsv_off[0] 
+    self.saturation = hsv_off[0] 
+    self.value = hsv_off[0] 
 
   def tree_dark(self):
     """ Turn all branches this color"""
@@ -213,29 +224,29 @@ class activeTree(object):
       self.tree.setBranchInt(bri,(0,0,0))
       #print "sent %d to %s" % (bri,repr(colors))
 
-  def do_test(self,colors,pd,lm,br):
-    #   tree.uni0.set_chan_int(i+0, colors[0])
-    #   tree.uni0.set_chan_int(i+1, colors[1])
-    #   tree.uni0.set_chan_int(i+2, colors[2])
-     #univ1.set_chan_int(i, val)
-    self.state = "test"
+  # def do_test(self,colors,pd,lm,br):
+  #   #   tree.uni0.set_chan_int(i+0, colors[0])
+  #   #   tree.uni0.set_chan_int(i+1, colors[1])
+  #   #   tree.uni0.set_chan_int(i+2, colors[2])
+  #    #univ1.set_chan_int(i, val)
+  #   self.state = "test"
 
-    if pd < 0 or br < 0 or lm < 0:
-      return 'vals must be > 0'
-    if pd >= len(self.tree.pods):
-      return 'max pod is %d' % len(self.tree.pods) + 1
-    pod = self.tree.pods[pd]
-    if lm >= len(pod.limbs):
-      return 'max limb is %d' % len(pod.limbs) + 1
-    limb = pod.limbs[lm]
-    if br >= len(limb.branches):
-      return 'max branch is %d' 
-    br = limb.branches[br]
-    self.tree.setBranchInt(br.brindex,colors)
-    return 'test OK'
+  #   if pd < 0 or br < 0 or lm < 0:
+  #     return 'vals must be > 0'
+  #   if pd >= len(self.tree.pods):
+  #     return 'max pod is %d' % len(self.tree.pods) + 1
+  #   pod = self.tree.pods[pd]
+  #   if lm >= len(pod.limbs):
+  #     return 'max limb is %d' % len(pod.limbs) + 1
+  #   limb = pod.limbs[lm]
+  #   if br >= len(limb.branches):
+  #     return 'max branch is %d' 
+  #   br = limb.branches[br]
+  #   self.tree.setBranchInt(br.brindex,colors)
+  #   return 'test OK'
 
   def update(self):
-    """ call this repeatedly to generate new data and update things"""
+    """ call this repeatedly to generate new data and send to tree"""
 
     self.timer.update()  
     if self.timer.timeout: # got timer flag
@@ -249,7 +260,7 @@ class activeTree(object):
       self.update_iter()
     elif self.mode == 'test':
       pass
-
+    self.tree.TreeSend()
 
 
   def send_frame(self,frame): 
@@ -261,26 +272,28 @@ class activeTree(object):
           index = int(frame[i+1][j+1]) # skip borders used for padding
           c = self.current_pal[index]
 
-          #hsv = list(colorsys.rgb_to_hsv(c[0],c[1],c[2]))
+          if self.hue is not None:
+            hsv = list(colorsys.rgb_to_hsv(c[0]/255.0,c[1]/255.0,c[2]/255.0))
           
-          #morph color here with brightness and hue shift
-          #hsv[2] = self.brightness * 2.0
-          #hsv[1] = self.saturation * hsv[1]
+            #morph color here with brightness and hue shift
+            #hsv[2] = self.brightness * 2.0
+            #hsv[1] = self.saturation * hsv[1]
 
           #rhue = 0.05 * (random.random() + 0.5) 
-          #hsv[0] = hsv[0] + self.hue + rhue
-          #if hsv[0] > 1.0:
-          #  hsv[0] -= 1.0
+            hsv[0] = hsv[0] + self.hue 
+            if hsv[0] > 1.0:
+              hsv[0] -= 1.0
 
-          #hsv[0] = self.hue
           #hsv[1] = 0.5
           #hsv[1] = 0.8
           
-          #rgb = colorsys.hsv_to_rgb(hsv[0],hsv[1],hsv[2])
-          #print repr(rgb)
+            rgb = colorsys.hsv_to_rgb(hsv[0],hsv[1],hsv[2])
+            #print repr(rgb)
 
-          #color = (int(rgb[0]),int(rgb[1]),int(rgb[2]))
-          color = (int(c[0]),int(c[1]),int(c[2]))
+            color = (int(rgb[0]*255),int(rgb[1]*255),int(rgb[2]*255))
+
+          else:
+            color = (int(c[0]),int(c[1]),int(c[2]))
 
           #print "index %d, color %s" % (index, repr(color))
           #sys.stdout.flush()
@@ -308,7 +321,6 @@ class activeTree(object):
               #treeDMX.setBranchRGB(b,pixel)
       brindex = self.tree.branches[b].brindex
       self.tree.setBranchInt(brindex,pixel)
-    self.tree.TreeSend()
 
   def update_iter(self):
     """ in generative mode, calc latest pattern and and do it..."""
@@ -329,10 +341,6 @@ class activeTree(object):
     #print self.interc
     sys.stdout.flush()
     self.send_frame(frame)
-    self.tree.TreeSend()
-    
-
-                      
 
   def update_config(self):
     """read (or reread) config file in case anything has changed"""
@@ -377,20 +385,12 @@ class activeTree(object):
 
     self.mode = newmode
 
-    smooth = None
-    if smooth is None:
-      try:
-        framec = self.cfg.getfloat(function,'framec')
-      except ConfigParser.NoOptionError:
-        logger.info("No config option for %s" % 'framec')
-      else:
-        self.interc = 0 # count for interpolation
-        self.framec = framec # if non-zero, interpolate new frame
-        print "new interp length = %d" % int(self.framec)
+    try:
+      framec = self.cfg.getfloat(function,'framec')
+    except ConfigParser.NoOptionError:
+      logger.info("No config option for %s" % 'framec')
     else:
-      self.interc = 0 # count for interpolation
-      self.framec = int(smooth)
-      print "new interp length = %d" % int(self.framec)
+      self.set_smooth(framec)
 
     try:
       self.hue = self.cfg.getfloat(function,'hue')
@@ -459,19 +459,18 @@ def handle_message(msg,tree):
   
   print "function: " + repr(func)
 
+
+# test for parameters common to all functions:
+  if 'smooth' in msg.keys():
+    smoothparam = int(msg['smooth'][0])     
+    tree.set_smooth(smoothparam)
+
   if func == 'color':
-    tree.mode = 'test'
     cstr = msg['colors'][0].strip("'")
     colors =  struct.unpack('BBB',cstr.decode('hex'))
 
-                #print repr(colors)
-    pd = int(msg['p1'][0]) - 1
-    lm = int(msg['p2'][0]) - 1
-    br = int(msg['p3'][0]) - 1
-          # for i in range(0,256,3):
-
-          #result = tree.do_test(colors,pd,lm,br)
-    tree.cef = 1
+    print repr(colors)
+    tree.set_color_offset(colors)
     return 'color OK'
 
 
@@ -494,9 +493,6 @@ def handle_message(msg,tree):
 
   elif func == 'winter':
    tree.set_mode(func)
-    #smoothparam = int(msg['smooth'][0]) 
-    #print "got smoothparam %d" % smoothparam
-    #tree.set_mode('winter',duration=10)
 
   elif func == 'spring':
     tree.set_mode(func)
@@ -509,14 +505,14 @@ def handle_message(msg,tree):
 
 #################### palette control
 
-  elif func == 'nextpal':
+  elif func == 'next-palette':
     tree.step_palette(1)
 
-  elif func == 'prevpal':
+  elif func == 'prev-palette':
     tree.step_palette(-1)
 
   else:
-    print "unhandled function '%d', ignoring" % func
+    print "unhandled function '%s', ignoring" % func
           #tree.current_pal = 'hsv'
 
   return "OK"
@@ -552,12 +548,8 @@ def listener(myP,foo):
         result = handle_message(msg,tree)
         myP.send(result)
 
-
     tree.update()        
-        #univ1.send_buffer()
     waitrate(20.0)
-    #time.sleep(0.02)
-
 
 if __name__ == '__main__':
   
