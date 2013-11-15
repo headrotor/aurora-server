@@ -2,13 +2,15 @@
 /* Javascript functions for Aurora control pages 
 J. Foote 2013, with welcome additions from Suraj Sharma. */
 
-var finalHex, CURRENT_COLOR;
+
+//var finalHex, CURRENT_COLOR;
 
 /* accepts parameters
  * h  Object = {h:x, s:y, v:z}
  * OR 
  * h, s, v
  */
+/*
 function HSVtoRGB(h, s, v) {
     var r, g, b, i, f, p, q, t;
     if (h && s === undefined && v === undefined) {
@@ -47,7 +49,7 @@ function hexFromRGB(r, g, b) {
     });
     return hex.join( "" ).toUpperCase();
 }
-
+*/
 //function refreshSwatchHue() {
     //var hue = $( "#hue" ).slider( "value" );
     //var color  = HSVtoRGB(hue/255.0, 1.0, 0.9);
@@ -84,12 +86,13 @@ function ajax_success(data, text_status, response){
     console.log('success',data);
     console.log('success',data[0].response);
     console.log('success',data[0].response[1]);
-    window.alert(data[0].response[0]);
+	console.log(data[0].response[0]);
+    //window.alert(data[0].response[0]);
 }
 
 function ajax_fail(response, text_status, code){
     console.log('ajax fail');
-    window.alert(data[0]);
+    //window.alert(data[0]);
 }
 
 
@@ -112,10 +115,15 @@ function submit_request(){
     ajax_request(params)
 }
 
-function submit_button(the_button){
+function submit_button(the_button, the_action){
     var params = {};
     params["function"] = the_button;
-    params["smooth"] = $( "#smooth" ).slider( "option", "value" );
+
+	if (the_action == "generative") {
+    	params["smooth"] = $( "#smooth-generative" ).slider( "option", "value" );
+	} else if (the_action == "pattern"){
+    	params["smooth"] = $( "#smooth-pattern" ).slider( "option", "value" );
+	}
     ajax_request(params)
 
 }
@@ -148,8 +156,9 @@ function submit_button(the_button){
 $(function() {
     $('#speed').slider({ value: 51 });
     $('#random').slider({ value: 51 });
-    $('#smooth').slider({ value: 51 });
-    $('#speed, #random','#smooth').draggable();
+    $('#smooth-generative').slider({ value: 51 });
+    $('#smooth-pattern').slider({ value: 51 });
+    $('#speed, #random','#smooth-generative', '#smooth-pattern').draggable();
 
 //$('#red, #green, #blue, #speed').draggable();
   //  $( "#red" ).slider( "value", 255 );
@@ -189,15 +198,26 @@ $(function() {
 	});
 	
 
+	//init patterns
     $('.actions button').click(function(e) {
-	e.preventDefault();
-	var thisButtonValue = $(this).data('value'); 
+		e.preventDefault();
+		var thisButtonValue = $(this).data('value'); 
+		var thisButtonAction = $(this).data('action'); 
 
-	//window.alert(thisButtonValue)
-	submit_button(thisButtonValue);
+		//window.alert(thisButtonValue)
+		submit_button(thisButtonValue, thisButtonAction);
     });
 
+	//mobile safari stuff - <= iOS 6
+	window.addEventListener("load",function() {
+	    // Set a timeout...
+	    setTimeout(function(){
+	        // Hide the address bar!
+	        window.scrollTo(0, 1);
+	    }, 0);
+	});
 
+	
 
 });
 

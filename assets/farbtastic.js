@@ -332,6 +332,46 @@ jQuery._farbtastic = function (container, callback) {
     return [h, s, l];
   }
 
+	/**
+	 * TouchConvert: Converts touch co-ordinates to mouse co-ordinates
+	 */
+	fb.touchconvert = function (e) {
+	  var e = e.originalEvent.touches.item(0);
+	  return e;
+	}
+
+	/**
+	 * Touchmove handler for iPad, iPhone etc
+	 */
+	fb.touchmove = function (e) {
+	  fb.mousemove( fb.touchconvert(e)  );
+	  event.preventDefault();
+	  return false;
+	}
+
+	/**
+	 * Touchend handler for iPad, iPhone etc
+	 */
+	fb.touchend = function (event) {
+	  $(document).unbind('touchmove', fb.touchmove);
+	  $(document).unbind('touchend', fb.touchend);
+	  document.dragging = false;
+	  event.preventDefault();
+	  return false;
+	}
+
+	// TouchStart bound, calls conversion of touchpoints to mousepoints
+	$('*', e).bind("touchstart", function (e) {
+	  // Capture mouse
+	  if (!document.dragging) {
+	    $(document).bind('touchmove', fb.touchmove).bind('touchend', fb.touchend);
+	    document.dragging = true;
+	  }
+	  fb.mousedown( fb.touchconvert(e) );
+	  e.preventDefault();
+	  return false;
+	});
+
   // Install mousedown handler (the others are set on the document on-demand)
   $('*', e).mousedown(fb.mousedown);
 

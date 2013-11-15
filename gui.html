@@ -9,7 +9,7 @@
         <title></title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+        <meta name="apple-mobile-web-app-capable" content="yes">
 
         <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
 
@@ -33,28 +33,71 @@
           <div class="aurora-main">
         
           <div data-role="header">
-            <h1>Aurora GUI</h1>
+            <h1>AURORA <sup>PALO ALTO</sup></h1>
           </div>
 
           <!-- Nav tabs -->
           <ul class="nav nav-tabs">
-            <li class="active"><a href="#test" data-toggle="tab">Test</a></li>
-            <li><a href="#patterns" data-toggle="tab">Patterns</a></li>
+            <li class="active"><a href="#patterns" data-toggle="tab">Patterns</a></li>
+            <li><a href="#generative" data-toggle="tab">Generative</a></li>
+            <li><a href="#color" data-toggle="tab">Color</a></li>
             <li><a href="#about" data-toggle="tab">About</a></li>
           </ul>
 
           <!-- Tab panes -->
           <div class="tab-content">
-            <div class="tab-pane active" id="test">
+            
+             <div class="tab-pane active" id="patterns">
+
+                 <ul class="actions">
+                    <li><button type="button" class="btn btn-default" data-value="summer" data-action="pattern">Summer</button></li>
+                    <li><button type="button" class="btn btn-default" data-value="autumn" data-action="pattern">Autumn</button></li>
+                    <li><button type="button" class="btn btn-default" data-value="winter" data-action="pattern">Winter</button></li>
+                    <li><button type="button" class="btn btn-default" data-value="spring" data-action="pattern">Spring</button></li>
+                </ul>
+
+                <form method='post' action='./dummy' id="patterns-form"> 
+                  <input type='hidden' name='smooth'/>	      
+                  <dl>
+                    <dt>Smooth</dt>
+                    <dd><div id="smooth-pattern" class="slider"></div></dd>
+                  </dl>
+                </form>
+
+              </div>
+              
+               <div class="tab-pane" id="generative">
+
+
+                 <ul class="actions">
+                   <li><button type="button" class="btn btn-default" data-value="ripple" data-action="generative">Ripple</button></li>
+                   <li><button type="button" class="btn btn-default" data-value="sparkle" data-action="generative">Sparkle</button></li>
+                   <li><button type="button" class="btn btn-default" data-value="wave" data-action="generative">Wave</button></li>
+                   <li><button type="button" class="btn btn-default" data-value="crash" data-action="generative">Crash</button></li>
+                 </ul>
+
+                  <form method='post' action='./dummy' id="generative-form"> 
+                    <input type='hidden' name='smooth'/>	      
+                    <dl>
+                      <dt>Smooth</dt>
+                      <dd><div id="smooth-generative" class="slider"></div></dd>
+                    </dl>
+                  </form>
+
+                </div>
+            
+            <div class="tab-pane" id="color">
             
                 <form method='post' action='./sparkle' id="controls-form">
                   <input type='hidden' name='speed'/>
                   <input type='hidden' name='random'/>
+
                 	
                 	<div><input type="text" id="color" name="color" value="#FF0000" /></div>
+                  
                   <div class="colorpicker-cont">
-        	    <div id="colorpicker"></div>
-        	  </div>
+        	          <div id="colorpicker"></div>
+              	  </div>
               
                   <dl>
                     <dt>Speed</dt>
@@ -79,32 +122,18 @@
                       </div>
                       <br/>-->
                       
-                      <input type="submit" class="btn btn-default" value="Start" />
+                      <input type="submit" class="btn btn-default" value="Send Color" />
                       
                 </form>
 
+                <!--
                 <div class="footer" data-role="footer">
                   <h4><a href="./index.html">Return</a></h4>
                 </div>
-              
+                -->
               
             </div>
-            <div class="tab-pane" id="patterns">
-              
-	      <ul class="actions">
-		<li><button type="button" class="btn btn-default" id="btn-active" data-value="summer">Summer</button></li>
-		<li><button type="button" class="btn btn-default" id="btn-active" data-value="winter">Winter</button></li>
-              </ul>
 
-            </div>
-
-            <form method='post' action='./dummy' id="controls-form"> 
-              <input type='hidden' name='smooth'/>	      
-	      <dl>
-		    <dt>Smooth</dt>
-		    <dd><div id="smooth" class="slider"></div></dd>
-		    </dl>
-		</form>
             <div class="tab-pane" id="about">
             
               About              
