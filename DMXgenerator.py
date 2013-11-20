@@ -4,7 +4,8 @@
 # patterns. If the server sends it a message from the web interface, it 
 # responds with an appropriate pattern. 
 
-from multiprocessing import Process, Pipe
+
+import subprocess
 import os
 import sys
 import struct
@@ -31,7 +32,12 @@ else:
   default_timer = time.time
 
 # global vars
+
+# timer for pattern length
 ticks = default_timer()
+
+#timer for watchdog (5 minutes)
+bark = default_timer()
 
 tree = None
 
@@ -64,9 +70,9 @@ class OpTimer(object):
         delta_time = now - self.last_time
         if self.idle is False:
           self.time_remain -= delta_time
-          if self.verbose:
-            print "evt timer running at " + str(self.time_remain)
-            sys.stdout.flush()
+          #if self.verbose:
+          #  print "evt timer running at " + str(self.time_remain)
+          #  sys.stdout.flush()
           if self.time_remain < 0:
             print "timer timeout"
             # set timout flag, clear/acknowledge with self.stop()
@@ -104,11 +110,11 @@ class activeTree(object):
     self.state = "idle"
     self.cfg = ConfigParser.RawConfigParser()
     self.timer = OpTimer()
+    self.timer.verbose = True
 
     # load all the images into an image dict
     self.imgs = self.load_images("/home/aurora/aurora-server/images")
     self.im_row = 0  # image row counter
-    self.img_count = 1  # play images this many times before returning
 
     # color offset, None for no offset
     self.brightness = 0.5
@@ -117,6 +123,8 @@ class activeTree(object):
 
     self.cfgfile = "defaults.cfg"
 
+
+    self.default = 'dark'  # pattern to use as default
 
     # instantiate iterative effect
     self.effects = []  # array of effects from  generative.py
@@ -149,7 +157,7 @@ class activeTree(object):
 
     self.update_config() # read config options from file
     # set default mode, etc. from config file
-    self.set_mode('default')
+    self.set_mode('default',-1)
     
     # tree state machine: idle (dark), image, generative 
     self.old_frame = self.effects[0].get_frame()
@@ -300,7 +308,7 @@ class activeTree(object):
         i += 1
 
   def update_image(self):
-    """Get next row of image file, and do it """
+    """Get next row of image file, and send it to tree """
     self.im_row = self.im_row + 1
     if self.im_row >= self.imd.y:
       self.im_row = 0
@@ -366,9 +374,19 @@ class activeTree(object):
   def set_mode(self,function,duration=None):
     """ named modes read mode from config file, set tree commands """
 
-    if function != 'default':
+    if function == 'default':
+      function = self.default
+      print "returning to default mode " + function
+    else:
       if duration is not None:
-        self.timer.start(duration)
+        if duration < 0: # make this pattern the default
+          self.default = function
+          print "new default is " + self.default
+        else:
+          self.timer.start(duration)
+      else: # None duration means use default user time from config
+        self.timer.start(self.cfg.getint('timer','user'))
+
 
     newmode = None
     try:
@@ -416,14 +434,6 @@ class activeTree(object):
 
       self.set_image(imname)
 
-      try:
-        self.img_count = self.cfg.getint(function,'img_count')
-      except ConfigParser.NoOptionError:
-        pass
-      else:
-        print "new image %s count %d " % (imname, self.img_count)
-        if self.img_count == 0:
-          self.img_count = None #@ none means loop forever
     elif self.mode == 'generate':
       try:
         effect = self.cfg.getint(function,'effect_id')
@@ -445,10 +455,13 @@ def waitrate(frate):
 
   ticks = default_timer()
 
+
+def ping_watchdog():
+  result = subprocess.check_call(["/bin/bash", "./ping-watchdog.sh"])
+  return result
+
 ############################ message handler, where the interactivity happens
 # two classes of patterns: generative and images
-# generative patterns run forever, images run for self.img_count of 
-# iterations or forever if self.img_count is None
 
 
 def handle_message(msg,tree):
@@ -467,6 +480,9 @@ def handle_message(msg,tree):
     smoothparam = int(msg['smooth'][0])     
     tree.set_smooth(smoothparam)
 
+  if 'dur' in msg.keys():
+    duration = int(msg['dur'][0])     
+    
   if func == 'color':
     cstr = msg['colors'][0].strip("'")
     colors =  struct.unpack('BBB',cstr.decode('hex'))
@@ -476,35 +492,13 @@ def handle_message(msg,tree):
     return 'color OK'
 
 
-### these are the generative functions
+### these are the functions from the GUI: 
 
-  elif func == 'ripple':
-   tree.set_mode(func)
+  elif func in ['ripple','sparkle','wave','crash','dark',
+                'winter', 'spring', 'autumn', 'summer']:
+    tree.set_mode(func,duration)
 
-  elif func == 'sparkle':
-   tree.set_mode(func)
-
-  elif func == 'wave':
-   tree.set_mode(func)
-
-  elif func == 'crash':
-   tree.set_mode(func)
- 
-
-#################### these are the pattern functions
-
-  elif func == 'winter':
-   tree.set_mode(func)
-
-  elif func == 'spring':
-    tree.set_mode(func)
-
-  elif func == 'autumn':
-    tree.set_mode(func)
-
-  elif func == 'summer':
-    tree.set_mode(func)
-
+  
 #################### palette control
 
   elif func == 'next-palette':
@@ -520,8 +514,6 @@ def handle_message(msg,tree):
   return "OK"
 
 
-
-
 ### listener: main loop and respond to commands
 def listener(myP,foo):
   """ This is started by the parent, listens for commands coming in on 
@@ -534,6 +526,7 @@ def listener(myP,foo):
   tree = activeTree(auroratree)
 
   myP.send('active!')
+  last_ping = 999
   while(1):
     if myP.poll():
       tree.update_config() # read config options from file
@@ -551,10 +544,13 @@ def listener(myP,foo):
         myP.send(result)
 
     tree.update()        
+    if default_timer() - last_ping > 60:
+      # every 5 minutes ping watchdog
+      result = ping_watchdog()
+      last_ping = default_timer()
+      print result
+
     waitrate(20.0)
 
 if __name__ == '__main__':
-  
-    parentP, childP = Pipe()
-    p = Process(target=f, args=(childP,"foo"))
-    p.start()
+  pass
