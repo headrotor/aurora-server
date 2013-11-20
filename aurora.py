@@ -151,7 +151,7 @@ class AuroraDMX(object):
     def TreeSend(self, dstart=0, dend=0):
         self.uni0.send_buffer()
         # needed for usb_dmx on 2 universes !?
-        time.sleep(0.01)
+        time.sleep(0.025)
         if self.uni1 is not None:
             self.uni1.send_buffer()
 

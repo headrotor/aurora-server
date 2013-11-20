@@ -65,7 +65,7 @@ class ImageData(object):
       prevrow = self.rows[r-1]
       
     irow = []
-    ic = [0]*3
+    ic = [0,0,0]
     for i, pixel in enumerate(self.rows[r]):
       for j in range(len(pixel)):
         ic[j] = int(f*pixel[j] + (1-f)*prevrow[i][j])

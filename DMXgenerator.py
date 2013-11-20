@@ -118,7 +118,6 @@ class activeTree(object):
     self.cfgfile = "defaults.cfg"
 
 
-
     # instantiate iterative effect
     self.effects = []  # array of effects from  generative.py
     size = (22,15)
@@ -155,8 +154,6 @@ class activeTree(object):
     # tree state machine: idle (dark), image, generative 
     self.old_frame = self.effects[0].get_frame()
     self.new_frame = self.effects[0].get_frame()
-
-
 
   def load_images(self, imgdir):
     """ scan image directory, load images """
@@ -204,15 +201,14 @@ class activeTree(object):
     print "active palette is now " + self.palette_list[self.pi]
     self.set_palette(self.palette_list[self.pi])
 
-
   def set_smooth(self,smooth):
     """set smoothness parameter"""
     self.interc = 0 # count for interpolation
-    self.framec = smooth # if non-zero, interpolate new frame
+    self.framec = int(smooth) # if non-zero, interpolate new frame
     print "new interp length = %d" % int(self.framec)
 
   def set_color_offset(self,coff):
-    print "setting color offset " + repr(coffset)
+    print "setting color offset " + repr(coff)
     hsv_off = colorsys.rgb_to_hsv(coff[0]/255.0,coff[1]/255.0,coff[2]/255.0)
     self.hue = hsv_off[0] 
     self.saturation = hsv_off[0] 
@@ -272,7 +268,8 @@ class activeTree(object):
           index = int(frame[i+1][j+1]) # skip borders used for padding
           c = self.current_pal[index]
 
-          if self.hue is not None:
+          if False:
+          #if self.hue is not None:
             hsv = list(colorsys.rgb_to_hsv(c[0]/255.0,c[1]/255.0,c[2]/255.0))
           
             #morph color here with brightness and hue shift
@@ -310,11 +307,13 @@ class activeTree(object):
 
     r = self.im_row
     self.interc += 1
-    if self.interc >= self.framec:
+    if self.interc > self.framec:
       self.interc = 0
       row = self.imd.getrow(r)
     else: # cross-fade from previous frame
-      row = self.imd.getrowinterp(r,self.interc/float(self.framec))
+      row = self.imd.getrow(r)
+      #print "interc %f " % float(int(self.interc)/float(self.framec))
+      #row = self.imd.getrowinterp(r,float(int(self.interc)/float(self.framec)))
               
     for b, pixel in enumerate(row):
               # set each branch to the corresponding pixel in this row
@@ -386,16 +385,17 @@ class activeTree(object):
     self.mode = newmode
 
     try:
-      framec = self.cfg.getfloat(function,'framec')
+      framec = self.cfg.getint(function,'framec')
     except ConfigParser.NoOptionError:
       logger.info("No config option for %s" % 'framec')
     else:
       self.set_smooth(framec)
 
+    self.hue = None
     try:
       self.hue = self.cfg.getfloat(function,'hue')
     except ConfigParser.NoOptionError:
-      logger.info("No config option named %s" % 'hue')
+      pass
 
     try:
       fcount = self.cfg.getint(function,'fcount')
@@ -404,7 +404,9 @@ class activeTree(object):
     else:
       self.fcount = fcount
 
-    print "new mode %s hue %d" % (function, self.hue) 
+    print "new mode %s" % function
+    if self.hue is not None:
+      print "hue %s" % repr(self.hue)
     if self.mode == 'image':
       try:
         imname = self.cfg.get(function,'image')
@@ -508,7 +510,7 @@ def handle_message(msg,tree):
   elif func == 'next-palette':
     tree.step_palette(1)
 
-  elif func == 'prev-palette':
+  elif func == 'previous-palette':
     tree.step_palette(-1)
 
   else:
