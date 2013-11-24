@@ -495,8 +495,8 @@ def handle_message(msg,tree):
 
 
 ### these are the functions from the GUI: 
-  elif func == 'crash':
-    assert(False)
+  #elif func == 'crash':
+  #  assert(False)
 
   elif func in ['ripple','sparkle','wave','crash','dark',
                 'winter', 'spring', 'autumn', 'summer']:
