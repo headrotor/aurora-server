@@ -482,7 +482,9 @@ def handle_message(msg,tree):
 
   if 'dur' in msg.keys():
     duration = int(msg['dur'][0])     
-    
+  else:
+    duration = None
+
   if func == 'color':
     cstr = msg['colors'][0].strip("'")
     colors =  struct.unpack('BBB',cstr.decode('hex'))
@@ -493,10 +495,13 @@ def handle_message(msg,tree):
 
 
 ### these are the functions from the GUI: 
+  elif func == 'crash':
+    assert(False)
 
   elif func in ['ripple','sparkle','wave','crash','dark',
                 'winter', 'spring', 'autumn', 'summer']:
     tree.set_mode(func,duration)
+
 
   
 #################### palette control

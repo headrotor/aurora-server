@@ -12,13 +12,13 @@ import sys
 import os
 from urlparse import urlparse, parse_qs
 from multiprocessing import Process, Pipe
+
 import signal
 import time
 import atexit
 import logging
 
 logger = logging.getLogger(__name__)
-keep_running = True
 
 class AuroraHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     """Handler for aurora control"""
@@ -127,34 +127,35 @@ class MyHTTPServer(BaseHTTPServer.HTTPServer):
                                            server_address, 
                                            RequestHandlerClass)
         self.handler = handler
+        #self.handler.server_parent = self
 
 def server_handler(request):
     """ dispatch a command to the DMX generator process """
     global ParentP # pipe end to send commands to 
     # send command, try to keep running crash if receiver does
+
     try:
         parentP.send(request)
     except:
         print "server_handler(%s) exited with '%s' " % (request, sys.exc_info())
-        keep_running = False
-        raise
+
+                                                        
+        #logger.info("server_handler(%s) exited with '%s' " % (request, sys.exc_info()))
     time.sleep(0.01)
     if parentP.poll():
         try:
             msg = parentP.recv()
         except EOFError: # happens when generator crashes, 
-            keep_running = False
-            raise
-            #sys.exit(1) # pull ripcord, let supervisord restart everything
+            #self.server_parent.shutdown()
+            logger.info("Child crash detected")
         else:
             print 'hander receieved ack "%s"' % msg
-            sys.stdout.flush()
             return msg
     else:
         return "null response :/"
 
-def start_child():
-    """Start the child process that generates DMX events"""
+def restart_child():
+    """Start/restart the child process that generates DMX events"""
     global parentP
     global p
     import DMXgenerator
@@ -173,30 +174,27 @@ def start_child():
 def start_server():
     """Start the server."""
     import os
+    global p
 
     logging.basicConfig(filename='logs/aurora.log', 
                         filemode='w', 
                         level=logging.DEBUG,
                         format='%(asctime)s %(message)s')
 
-    proc = start_child()
+    proc = restart_child()
     #server = BaseHTTPServer.HTTPServer(server_address, AuroraHandler)
     server = MyHTTPServer(server_address, AuroraHandler,server_handler)
     print "aurora server pid %d listening on port %d" % (os.getpid(),PORT)
     logging.info('aurora server pid %d listening on port %d' % (os.getpid(),PORT))
     keep_running = True
    
-    while keep_running:
+    while True:
         #server.serve_forever()
+        #print "child proc " + repr(p.is_alive())
+        if p.is_alive() is not True:
+            proc = restart_child()
+            logger.info('DMX process restarted as ' + repr(proc))
         server.handle_request()
-        #keep_running = False
-    # only get here if there's a problem, 
-    # pull ripcord and let supervisor restart    
-    server.server_close()
-    print "no longer serving"
-    #proc.terminate()
-    #proc.join()
-    return
 
 
 def handler(signum, frame):
